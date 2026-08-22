@@ -1,8 +1,9 @@
 name: Build APK
 on:
   push:
-    paths:
-      - 'www/index.html'
+    branches:
+      - main
+      - master
 
 jobs:
   build:
@@ -25,8 +26,8 @@ jobs:
       - name: Install Dependencies
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init MyWebApp com.example.app --web-dir www
-          npx cap add android
+          npx cap init MyWebApp com.example.app --web-dir www || true
+          if [ ! -d "android" ]; then npx cap add android; fi
 
       - name: Build APK
         run: |
