@@ -1,1 +1,2400 @@
-<h1>Hello, My App is Working!</h1>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premium Earning Platform</title>
+  
+  <!-- Firebase Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: rgba(23, 31, 50, 0.6);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-gold: #f59e0b;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --notice-speed: 18s; /* Default scroll speed */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding-bottom: 90px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      padding: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Maintenance & Auth Overlay Screen */
+    #maintenanceOverlay, #authOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg-color);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    #authOverlay {
+      display: none;
+      background: rgba(11, 15, 25, 0.95);
+      backdrop-filter: blur(15px);
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 25px 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .auth-tabs {
+      display: flex;
+      background: rgba(0,0,0,0.3);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+
+    .auth-tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .auth-tab-btn.active {
+      background: var(--primary-gradient);
+      color: #fff;
+    }
+
+    /* Page Visibility */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Glassmorphism Cards */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .balance-card {
+      background: var(--primary-gradient);
+      border: none;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(168, 85, 247, 0.3);
+    }
+
+    .balance-amount {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin: 8px 0;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .stat-item {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 10px;
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+
+    /* SCROLLING NOTICE TICKER BOARD */
+    .notice-ticker {
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .ticker-icon {
+      font-size: 1.2rem;
+      animation: pulse 1.5s infinite;
+      flex-shrink: 0;
+    }
+    .ticker-wrap {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .ticker-content {
+      display: inline-block;
+      white-space: nowrap;
+      padding-left: 100%;
+      animation: tickerScroll var(--notice-speed) linear infinite;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+    @keyframes tickerScroll {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-100%, 0); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    /* MOVING BANNER SLIDER */
+    .banner-slider {
+      width: 100%;
+      overflow: hidden;
+      border-radius: var(--radius-lg);
+      margin-bottom: 16px;
+      position: relative;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    .banner-track {
+      display: flex;
+      transition: transform 0.5s ease-in-out;
+      width: 100%;
+    }
+    .banner-slide {
+      min-width: 100%;
+      padding: 18px 16px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+    }
+    .banner-slide img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: var(--radius-md);
+    }
+    .banner-icon {
+      font-size: 2.2rem;
+      background: rgba(255,255,255,0.1);
+      padding: 10px;
+      border-radius: 14px;
+    }
+    .banner-info h4 {
+      font-size: 1rem;
+      color: #fff;
+    }
+    .banner-info p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .banner-indicators {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+    }
+    .banner-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .banner-dot.active {
+      background: #a855f7;
+      width: 18px;
+      border-radius: 10px;
+    }
+
+    /* Earn Grid */
+    .earn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .earn-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .earn-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+
+    .limit-badge {
+      font-size: 0.68rem;
+      color: var(--accent-gold);
+      background: rgba(245, 158, 11, 0.15);
+      padding: 2px 6px;
+      border-radius: 6px;
+      margin-top: 4px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--primary-gradient);
+      border: none;
+      color: #fff;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: opacity 0.2s;
+    }
+
+    .btn-primary:active { opacity: 0.8; }
+
+    /* Bottom Glass Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.75rem;
+      gap: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      color: #a855f7;
+      font-weight: 600;
+    }
+
+    /* Modal / Popup */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    #welcomePopupModal .modal-box {
+      background: linear-gradient(145deg, rgba(23, 31, 50, 0.98), rgba(15, 23, 42, 0.98));
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      box-shadow: 0 10px 40px rgba(168, 85, 247, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 25px 20px;
+      position: relative;
+    }
+
+    /* Inputs & Selects */
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      margin-top: 8px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    /* Spin Wheel Canvas */
+    #wheelCanvas {
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      border: 5px solid #a855f7;
+      transition: transform 3s cubic-bezier(0.15, 0.99, 0.18, 0.99);
+    }
+
+    /* Scratch Card Custom Styles */
+    .scratch-header-banner {
+      background: linear-gradient(135deg, #3b0764 0%, #6b21a8 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .scratch-card-frame {
+      background: linear-gradient(145deg, #f59e0b, #b45309);
+      padding: 12px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .scratch-inner-box {
+      background: #fef3c7;
+      border-radius: 12px;
+      height: 180px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #scratchCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    .scratch-action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn-scratch-act {
+      border: none;
+      padding: 10px;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: bold;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .timer-badge-box {
+      font-size: 0.85rem;
+      color: var(--accent-gold);
+      background: rgba(245, 158, 11, 0.15);
+      padding: 8px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-weight: bold;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Authentication Screen Overlay (Login / Register) -->
+  <div id="authOverlay">
+    <div class="auth-card">
+      <div style="font-size: 2.5rem; margin-bottom: 8px;">💎</div>
+      <h2 style="margin-bottom: 15px; font-size: 1.4rem;">Premium Earning</h2>
+      
+      <!-- Auth Switcher Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tabLoginBtn" onclick="switchAuthMode('login')">লগইন</button>
+        <button class="auth-tab-btn" id="tabRegisterBtn" onclick="switchAuthMode('register')">রেজিস্ট্রেশন</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLogin(event)" style="text-align: left;">
+        <label style="font-size: 0.8rem; color: var(--text-muted);">ইমেইল অ্যাড্রেস</label>
+        <input type="email" id="loginEmail" class="form-input" placeholder="example@mail.com" required>
+
+        <label style="font-size: 0.8rem; color: var(--text-muted);">পাসওয়ার্ড</label>
+        <input type="password" id="loginPassword" class="form-input" placeholder="******" required>
+
+        <button type="submit" class="btn-primary" id="loginSubmitBtn">প্রবেশ করুন</button>
+      </form>
+
+      <!-- Registration Form -->
+      <form id="registerForm" onsubmit="handleRegister(event)" style="text-align: left; display: none;">
+        <label style="font-size: 0.8rem; color: var(--text-muted);">আপনার নাম</label>
+        <input type="text" id="regName" class="form-input" placeholder="আপনার নাম লিখুন" required>
+
+        <label style="font-size: 0.8rem; color: var(--text-muted);">ইমেইল অ্যাড্রেস</label>
+        <input type="email" id="regEmail" class="form-input" placeholder="example@mail.com" required>
+
+        <label style="font-size: 0.8rem; color: var(--text-muted);">পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)</label>
+        <input type="password" id="regPassword" class="form-input" placeholder="******" minlength="6" required>
+
+        <label style="font-size: 0.8rem; color: var(--text-muted);">রেফারেল কোড (ঐচ্ছিক)</label>
+        <input type="text" id="regRefCode" class="form-input" placeholder="কোড থাকলে দিন">
+
+        <button type="submit" class="btn-primary" id="regSubmitBtn">রেজিস্ট্রেশন করুন</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Maintenance Mode Screen -->
+  <div id="maintenanceOverlay">
+    <div style="font-size: 3rem; margin-bottom: 10px;">🛠</div>
+    <h2>সিস্টেম মেইনটেন্যান্স চলছে</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;">আমাদের সার্ভার উন্নয়নের কাজ চলছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।</p>
+  </div>
+
+  <!-- Global Ad Container (Admin Global Script Container) -->
+  <div id="globalAdContainer"></div>
+
+  <div class="container">
+
+    <!-- Header Section -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 45px; height: 45px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; font-weight: bold;" id="user-avatar-char">U</div>
+        <div>
+          <h4 id="user-name">স্বাগতম, ইউজার!</h4>
+          <span style="font-size: 0.75rem; color: var(--text-muted);" id="user-id">ID: #---</span>
+        </div>
+      </div>
+      <!-- Bell Icon Button: Triggers Notice Popup Modal -->
+      <button style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 10px; border-radius: 50%; cursor: pointer; color: #fff;" onclick="showBellNotice()">
+        🔔
+      </button>
+    </div>
+
+    <!-- 1. HOME TAB -->
+    <div id="homeTab" class="tab-content active">
+
+      <!-- SCROLLING NOTICE BOARD TICKER -->
+      <div class="notice-ticker" onclick="showBellNotice()">
+        <div class="ticker-icon">📢</div>
+        <div class="ticker-wrap">
+          <div class="ticker-content" id="scrollingNoticeText">
+            স্বাগতম! আমাদের প্রিমিয়াম আর্নিং প্ল্যাটফর্মে প্রতিদিন কাজ করে এবং রেফার করে বেশি বেশি টাকা আয় করুন।
+          </div>
+        </div>
+      </div>
+
+      <!-- BALANCE CARD -->
+      <div class="glass-card balance-card">
+        <span style="font-size: 0.85rem; opacity: 0.9;">Available Balance</span>
+        <div class="balance-amount">৳ <span id="main-balance">0.00</span></div>
+        
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div style="font-size: 0.75rem; opacity: 0.8;">Today's Earned</div>
+            <strong id="today-earned">৳ 0.00</strong>
+          </div>
+          <div class="stat-item">
+            <div style="font-size: 0.75rem; opacity: 0.8;">Referral Earned</div>
+            <strong id="ref-earned">৳ 0.00</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOVING BANNER SLIDER -->
+      <div class="banner-slider">
+        <div class="banner-track" id="bannerTrack">
+          <!-- Default Dynamic Slides -->
+          <div class="banner-slide">
+            <div class="banner-icon">🚀</div>
+            <div class="banner-info">
+              <h4>প্রতিদিন আনলিমিটেড আয়!</h4>
+              <p>ভিডিও অ্যাড দেখে ও স্পিন করে ইনকাম করুন প্রতিদিন।</p>
+            </div>
+          </div>
+          <div class="banner-slide">
+            <div class="banner-icon">🎁</div>
+            <div class="banner-info">
+              <h4>১০ টাকা রেফার বোনাস!</h4>
+              <p>বন্ধুদের ইনভাইট করুন এবং প্রতি রেফারে ১০ টাকা পান।</p>
+            </div>
+          </div>
+          <div class="banner-slide">
+            <div class="banner-icon">⚡</div>
+            <div class="banner-info">
+              <h4>ইনস্ট্যান্ট উইথড্র সুবিধা!</h4>
+              <p>বিকাশ, নগদ ও রকেটের মাধ্যমে দ্রুত টাকা তুলুন।</p>
+            </div>
+          </div>
+        </div>
+        <!-- Indicators -->
+        <div class="banner-indicators" id="bannerIndicators">
+          <span class="banner-dot active" onclick="goToSlide(0)"></span>
+          <span class="banner-dot" onclick="goToSlide(1)"></span>
+          <span class="banner-dot" onclick="goToSlide(2)"></span>
+        </div>
+      </div>
+
+      <h3 style="margin-bottom: 12px; font-size: 1.1rem;">Quick Earn</h3>
+      <div class="earn-grid">
+        <div class="glass-card earn-card">
+          <div class="earn-icon">🎬</div>
+          <h4>Watch Ads</h4>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">রিওয়ার্ড: ৳ <span id="displayAdReward">2.50</span></p>
+          <div class="limit-badge">সীমা: <span id="displayAdLimit">০/১০</span></div>
+          <button class="btn-primary" onclick="watchAd(this)">Earn Now</button>
+        </div>
+
+        <div class="glass-card earn-card">
+          <div class="earn-icon">🎁</div>
+          <h4>Daily Bonus</h4>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">রিওয়ার্ড: ৳ <span id="displayDailyBonus">5.00</span></p>
+          <div class="limit-badge">দৈনিক ১ বার</div>
+          <button class="btn-primary" onclick="claimDailyBonus()">Claim</button>
+        </div>
+
+        <div class="glass-card earn-card">
+          <div class="earn-icon">🎡</div>
+          <h4>Spin & Win</h4>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">রিওয়ার্ড: ৳ <span id="displaySpinReward">5.00</span></p>
+          <div class="limit-badge">সীমা: <span id="displaySpinLimit">০/৫</span></div>
+          <button class="btn-primary" onclick="toggleModal('spinModal', true)">Play Now</button>
+        </div>
+
+        <div class="glass-card earn-card">
+          <div class="earn-icon">🎫</div>
+          <h4>Scratch Card</h4>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">রিওয়ার্ড: ৳ <span id="displayScratchReward">2.00</span></p>
+          <div class="limit-badge">সীমা: <span id="displayScratchLimit">০/৩</span></div>
+          <button class="btn-primary" onclick="openScratchCard()">Scratch</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. TASKS TAB -->
+    <div id="tasksTab" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3>Task Center</h3>
+        <span id="taskProgressBadge" style="background: rgba(168, 85, 247, 0.2); border: 1px solid var(--card-border); color: #a855f7; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85rem;">
+          ০/০
+        </span>
+      </div>
+      <div id="userTaskList">
+        <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">টাস্ক লোড হচ্ছে...</p>
+      </div>
+    </div>
+
+    <!-- 3. REFERRAL TAB -->
+    <div id="referralTab" class="tab-content">
+      <div class="glass-card" style="text-align: center;">
+        <h3>Invite Friends & Earn</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0;">প্রতিটি সফল রেফারেলের জন্য পান ৳ ১০.০০ বোনাস!</p>
+        
+        <label style="font-size: 0.75rem; color: var(--text-muted);">Your Referral Code</label>
+        <input type="text" class="form-input" id="refCode" value="..." readonly style="text-align: center; font-weight: bold;">
+        
+        <button class="btn-primary" onclick="copyReferral()">Copy Referral Code</button>
+        <button class="btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-top: 8px;" onclick="shareReferral()">🚀 Share Referral Link</button>
+      </div>
+    </div>
+
+    <!-- 4. WALLET TAB -->
+    <div id="walletTab" class="tab-content">
+      <div class="glass-card">
+        <h3>Withdraw Earnings</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">সর্বনিম্ন উত্তোলন: ৳ <span id="displayMinWithdraw">50.00</span></p>
+
+        <label style="font-size: 0.8rem;">Payment Method</label>
+        <select class="form-input" id="withdrawMethod">
+          <option value="bKash">bKash</option>
+          <option value="Nagad">Nagad</option>
+          <option value="Rocket">Rocket</option>
+        </select>
+
+        <label style="font-size: 0.8rem;">Account Number</label>
+        <input type="number" class="form-input" id="withdrawAcc" placeholder="017xxxxxxxx">
+
+        <label style="font-size: 0.8rem;">Amount (BDT)</label>
+        <input type="number" class="form-input" id="withdrawAmount" placeholder="50.00">
+
+        <button class="btn-primary" onclick="requestWithdrawal()">Submit Request</button>
+      </div>
+
+      <h4 style="margin-bottom: 10px;">Recent Transactions</h4>
+      <div class="glass-card" style="padding: 12px;" id="transHistory">
+        <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">এখনো কোনো ট্রানজেকশন হয়নি</p>
+      </div>
+    </div>
+
+    <!-- 5. PROFILE TAB -->
+    <div id="profileTab" class="tab-content">
+      <div class="glass-card" style="text-align: center;">
+        <div style="width: 70px; height: 70px; border-radius: 50%; background: var(--primary-gradient); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold;" id="profile-avatar-char">U</div>
+        <h3 id="profile-name">User Profile</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted);" id="profile-email">email@domain.com</p>
+      </div>
+
+      <div class="glass-card">
+        <button class="btn-primary" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4);" onclick="handleLogout()">Logout</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- NOTICE POPUP MODAL -->
+  <div id="welcomePopupModal" class="modal-overlay">
+    <div class="glass-card modal-box">
+      <div style="font-size: 2.8rem; margin-bottom: 8px;">🔔</div>
+      <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-size: 1.25rem;">জরুরি নোটিশ</h3>
+      <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 12px; font-size: 0.88rem; line-height: 1.5; color: #e2e8f0; text-align: left; margin: 12px 0;" id="welcomeNoticeText">
+        স্বাগতম আমাদের প্ল্যাটফর্মে! প্রতিদিন সঠিক নিয়মে টাস্ক সম্পন্ন করুন এবং কোনো প্রকার ভিপিএন অপব্যবহার এড়িয়ে চলুন। যেকোনো সহায়তায় সাপোর্ট সেকশনে যোগাযোগ করুন।
+      </div>
+      <button class="btn-primary" onclick="toggleModal('welcomePopupModal', false)">ঠিক আছে, ধন্যবাদ</button>
+    </div>
+  </div>
+
+  <!-- Scratch Card UI Modal -->
+  <div id="scratchModal" class="modal-overlay">
+    <div class="glass-card modal-box" style="padding: 16px;">
+      
+      <!-- Top Navigation Row -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 1.1rem; display: flex; align-items: center; gap: 6px;">
+          <span style="cursor: pointer;" onclick="toggleModal('scratchModal', false)">❮</span> Scratch Card
+        </h3>
+        <div style="display: flex; gap: 8px;">
+          <span style="background: rgba(245, 158, 11, 0.2); border: 1px solid var(--accent-gold); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; color: var(--accent-gold); font-weight: bold;">
+            🪙 <span id="scratchCoinDisplay">0.00</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Banner -->
+      <div class="scratch-header-banner">
+        <div style="font-size: 2.2rem;">🎁</div>
+        <div>
+          <h4 style="color: #fef08a; font-size: 1rem;">Scratch & Win</h4>
+          <p style="font-size: 0.75rem; color: #e9d5ff; margin-top: 2px;">Scratch the card and win exciting rewards!</p>
+        </div>
+      </div>
+
+      <!-- Live Scratch Ad Timer Notice -->
+      <div id="scratchTimerText" class="timer-badge-box"></div>
+
+      <!-- Scratch Frame -->
+      <div class="scratch-card-frame">
+        <div class="scratch-inner-box">
+          <div style="font-size: 2.5rem; margin-bottom: 4px;">🪙</div>
+          <h2 style="color: #78350f; font-weight: 900; font-size: 1.8rem;" id="scratchAmountText">৳ 2.00</h2>
+          <span style="color: #92400e; font-size: 0.8rem; font-weight: bold;">Coins Reward</span>
+          <canvas id="scratchCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Card Counter -->
+      <div style="display: flex; justify-content: space-between; align-items: center; text-align: left; margin-bottom: 6px;">
+        <div>
+          <h5 style="font-size: 0.85rem;">Your Scratch Cards</h5>
+          <p style="font-size: 0.7rem; color: var(--text-muted);">Today Limit: <span id="scratchModalLimit">0/3</span></p>
+        </div>
+        <span style="font-weight: bold; color: var(--accent-gold); font-size: 1.1rem;" id="scratchCardCount">🎟 <span id="cardCountVal">3</span></span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="scratch-action-grid">
+        <button id="btnScratchWatchAd" class="btn-scratch-act" style="background: linear-gradient(135deg, #7c3aed, #a855f7);" onclick="watchAdForCard(this)">
+          🎬 Watch Ad <br><span style="font-size:0.65rem; opacity:0.8;">+1 Card</span>
+        </button>
+        <button class="btn-scratch-act" style="background: linear-gradient(135deg, #059669, #10b981);" onclick="goToTasksFromScratch()">
+          📋 Complete Task <br><span style="font-size:0.65rem; opacity:0.8;">+1 Card</span>
+        </button>
+      </div>
+
+      <!-- Recent Wins -->
+      <div style="text-align: left; margin-top: 16px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px;">
+        <h5 style="font-size: 0.8rem; color: var(--accent-gold); margin-bottom: 8px;">🎁 Recent Wins</h5>
+        <div id="recentWinsContainer">
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 6px;">
+            <span>🪙 <span class="active-user-display-name">ইউজার</span></span>
+            <span style="color: var(--accent-gold);" id="activeUserWinDisplay">এখনো স্ক্র্যাচ করা হয়নি</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="background: transparent; border: 1px solid var(--card-border); margin-top: 12px;" onclick="toggleModal('scratchModal', false)">Close</button>
+    </div>
+  </div>
+
+  <!-- Spin Wheel Modal -->
+  <div id="spinModal" class="modal-overlay">
+    <div class="glass-card modal-box">
+      <h3>Spin & Win</h3>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">দৈনিক স্পিন লিমিট: <span id="spinModalLimit">০/৫</span></p>
+      
+      <div style="margin: 20px 0; display: flex; justify-content: center;">
+        <canvas id="wheelCanvas" width="250" height="250"></canvas>
+      </div>
+
+      <!-- Live Spin Ad Timer Notice -->
+      <div id="spinTimerText" class="timer-badge-box"></div>
+
+      <button id="spinBtn" class="btn-primary" onclick="startSpin()">SPIN NOW</button>
+      <button class="btn-primary" style="background: transparent; border: 1px solid var(--card-border);" onclick="toggleModal('spinModal', false)">Close</button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('homeTab', this)">
+      <span>🏠</span><span>Home</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('tasksTab', this)">
+      <span>📋</span><span>Tasks</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('referralTab', this)">
+      <span>👥</span><span>Refer</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('walletTab', this)">
+      <span>💳</span><span>Wallet</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('profileTab', this)">
+      <span>👤</span><span>Profile</span>
+    </button>
+  </nav>
+
+  <!-- JavaScript Engine -->
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBFY494eZOIgj3oe1nQ2j30YQGIFfeuISk",
+      authDomain: "premiumearningplatform.firebaseapp.com",
+      databaseURL: "https://premiumearningplatform-default-rtdb.firebaseio.com",
+      projectId: "premiumearningplatform",
+      storageBucket: "premiumearningplatform.firebasestorage.app",
+      messagingSenderId: "615243158311",
+      appId: "1:615243158311:android:02adf3af48c96197184f02"
+    };
+
+    // Initialize Firebase Services
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+
+    // Enable Auth Persistence so tab switching never logs out user
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+    // User State Variables
+    let currentUserId = null;
+    let userRef = null;
+
+    // Get Today's Date String for Daily Limits Reset
+    const getTodayDateStr = () => new Date().toISOString().split('T')[0];
+
+    // State Management
+    let userState = {
+      name: "ইউজার",
+      email: "",
+      balance: 0.00,
+      todayEarned: 0.00,
+      refEarned: 0.00,
+      refCode: "",
+      dailyClaimed: false,
+      scratchCards: 3,
+      todayAdCount: 0,
+      todaySpinCount: 0,
+      todayScratchCount: 0,
+      todayTaskCount: 0,
+      lastActiveDate: getTodayDateStr(),
+      taskLastTimes: {}, // Individual Task Cooldown Tracking Object
+      completedTasks: {}
+    };
+
+    // Dynamic Admin Settings State
+    let adminSettings = {
+      adReward: 2.50,
+      spinReward: 5.00,
+      scratchReward: 2.00,
+      dailyBonus: 5.00,
+      minWithdraw: 50.00,
+      adLimit: 10,
+      spinLimit: 5,
+      scratchLimit: 3,
+      taskLimit: 10,
+      taskCooldown: 0, // Default break time / cooldown
+      adTimer: 16,     // Fixed: Changed default from 14 to 16
+      spinTimer: 16,   // Fixed: Changed default from 14 to 16
+      scratchTimer: 16,// Fixed: Changed default from 14 to 16
+      taskTimer: 10,
+      noticeSpeed: 18, // dynamic notice speed in seconds
+      adScriptWatch: "",
+      adScriptSpin: "",
+      adScriptScratch: "",
+      adScriptTask: "", // Task Ad script support
+      adScriptGlobal: ""
+    };
+
+    // Global Cooldown Loop Interval
+    let taskCooldownInterval = null;
+
+    // BANNER SLIDER LOGIC
+    let currentBannerIndex = 0;
+    let bannerTotalCount = 3;
+    const bannerTrack = document.getElementById('bannerTrack');
+
+    function goToSlide(index) {
+      currentBannerIndex = index;
+      if(bannerTrack) {
+        bannerTrack.style.transform = `translateX(-${currentBannerIndex * 100}%)`;
+      }
+      const dots = document.querySelectorAll('.banner-dot');
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentBannerIndex);
+      });
+    }
+
+    // Automatic Banner Slide Interval (Every 4 Seconds)
+    setInterval(() => {
+      if (bannerTotalCount > 0) {
+        currentBannerIndex = (currentBannerIndex + 1) % bannerTotalCount;
+        goToSlide(currentBannerIndex);
+      }
+    }, 4000);
+
+    // DYNAMIC RENDER BANNERS FROM ADMIN DATA
+    function renderDynamicBanners(bannersData) {
+      if (!bannerTrack) return;
+      
+      let bannerList = [];
+      if (Array.isArray(bannersData)) {
+        bannerList = bannersData.filter(item => item);
+      } else if (typeof bannersData === 'object' && bannersData !== null) {
+        bannerList = Object.values(bannersData);
+      }
+
+      if (bannerList.length === 0) return;
+
+      bannerTrack.innerHTML = '';
+      const indicatorsContainer = document.getElementById('bannerIndicators');
+      if (indicatorsContainer) indicatorsContainer.innerHTML = '';
+
+      bannerTotalCount = bannerList.length;
+
+      bannerList.forEach((banner, index) => {
+        const slide = document.createElement('div');
+        slide.className = 'banner-slide';
+        
+        const imageUrl = typeof banner === 'string' ? banner : (banner.image || banner.img || banner.url || banner.bannerUrl);
+        const linkUrl = typeof banner === 'object' ? (banner.link || banner.target || '') : '';
+        const titleText = typeof banner === 'object' ? (banner.title || '') : '';
+        const descText = typeof banner === 'object' ? (banner.desc || banner.description || '') : '';
+
+        if (imageUrl && imageUrl.trim() !== '') {
+          slide.innerHTML = `<img src="${imageUrl}" alt="Banner ${index+1}">`;
+        } else {
+          slide.innerHTML = `
+            <div class="banner-icon">🚀</div>
+            <div class="banner-info">
+              <h4>${titleText || 'বিশেষ অফার!'}</h4>
+              <p>${descText || 'আমাদের প্ল্যাটফর্মে কাজ করে প্রতিদিন রিওয়ার্ড জিতুন।'}</p>
+            </div>
+          `;
+        }
+
+        if (linkUrl && linkUrl.trim() !== '') {
+          slide.onclick = () => {
+            let targetUrl = linkUrl.trim();
+            if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+              targetUrl = 'https://' + targetUrl;
+            }
+            window.open(targetUrl, '_blank');
+          };
+        }
+
+        bannerTrack.appendChild(slide);
+
+        if (indicatorsContainer) {
+          const dot = document.createElement('span');
+          dot.className = `banner-dot ${index === 0 ? 'active' : ''}`;
+          dot.onclick = () => goToSlide(index);
+          indicatorsContainer.appendChild(dot);
+        }
+      });
+
+      currentBannerIndex = 0;
+      goToSlide(0);
+    }
+
+    // Generate unique random referral code
+    function generateRefCode() {
+      return "REF" + Math.floor(100000 + Math.random() * 900000);
+    }
+
+    // Convert English digits to Bengali digits
+    function toBengaliDigits(num) {
+      if (num === undefined || num === null) return '০';
+      const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+      return num.toString().replace(/\d/g, d => bnDigits[d]);
+    }
+
+    // AUTH SWITCH TABS
+    function switchAuthMode(mode) {
+      const loginForm = document.getElementById('loginForm');
+      const regForm = document.getElementById('registerForm');
+      const tabLoginBtn = document.getElementById('tabLoginBtn');
+      const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+
+      if (mode === 'login') {
+        loginForm.style.display = 'block';
+        regForm.style.display = 'none';
+        tabLoginBtn.classList.add('active');
+        tabRegisterBtn.classList.remove('active');
+      } else {
+        loginForm.style.display = 'none';
+        regForm.style.display = 'block';
+        tabLoginBtn.remove('active');
+        tabRegisterBtn.classList.add('active');
+      }
+    }
+
+    // FIREBASE AUTH LISTENER
+    auth.onAuthStateChanged((user) => {
+      const authOverlay = document.getElementById('authOverlay');
+      if (user) {
+        currentUserId = user.uid;
+        userRef = database.ref('users/' + currentUserId);
+        authOverlay.style.display = 'none';
+        initUserDatabaseSync();
+        loadUserWithdrawals();
+      } else {
+        currentUserId = null;
+        userRef = null;
+        authOverlay.style.display = 'flex';
+      }
+    });
+
+    // LOGIN HANDLER
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('loginSubmitBtn');
+
+      btn.disabled = true;
+      btn.innerText = "অপেক্ষা করুন...";
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          btn.disabled = false;
+          btn.innerText = "প্রবেশ করুন";
+        })
+        .catch((error) => {
+          btn.disabled = false;
+          btn.innerText = "প্রবেশ করুন";
+          alert("লগইন ব্যর্থ হয়েছে: " + error.message);
+        });
+    }
+
+    // REGISTER HANDLER WITH REFERRAL BONUS
+    function handleRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      const givenRefCode = document.getElementById('regRefCode').value.trim();
+      const btn = document.getElementById('regSubmitBtn');
+
+      btn.disabled = true;
+      btn.innerText = "প্রসেসিং হচ্ছে...";
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const newUid = userCredential.user.uid;
+          const selfRefCode = generateRefCode();
+
+          const initialData = {
+            name: name,
+            email: email,
+            balance: 0.00,
+            todayEarned: 0.00,
+            refEarned: 0.00,
+            refCode: selfRefCode,
+            dailyClaimed: false,
+            scratchCards: 3,
+            todayAdCount: 0,
+            todaySpinCount: 0,
+            todayScratchCount: 0,
+            todayTaskCount: 0,
+            lastActiveDate: getTodayDateStr(),
+            taskLastTimes: {},
+            completedTasks: {},
+            joinedAt: new Date().toISOString()
+          };
+
+          database.ref('users/' + newUid).set(initialData).then(() => {
+            if (givenRefCode !== "") {
+              database.ref('users').orderByChild('refCode').equalTo(givenRefCode).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                  snapshot.forEach((childSnapshot) => {
+                    const refUserId = childSnapshot.key;
+                    const refUserData = childSnapshot.val();
+                    const refBonus = 10.00;
+                    
+                    database.ref('users/' + refUserId).update({
+                      balance: (refUserData.balance || 0) + refBonus,
+                      refEarned: (refUserData.refEarned || 0) + refBonus
+                    });
+                  });
+                }
+              });
+            }
+
+            btn.disabled = false;
+            btn.innerText = "রেজিস্ট্রেশন করুন";
+            alert("রেজিস্ট্রেশন সফল হয়েছে!");
+          });
+        })
+        .catch((error) => {
+          btn.disabled = false;
+          btn.innerText = "রেজিস্ট্রেশন করুন";
+          alert("রেজিস্ট্রেশন ত্রুটি: " + error.message);
+        });
+    }
+
+    // LOGOUT HANDLER
+    function handleLogout() {
+      if (confirm("আপনি কি নিশ্চিত যে লগআউট করতে চান?")) {
+        auth.signOut().then(() => {
+          alert("সফলভাবে লগআউট করা হয়েছে!");
+        });
+      }
+    }
+
+    // Trigger Ad Network (MONETAG & DIRECT LINK ENHANCED FIX)
+    function triggerAdNetwork(adCodeOrLink) {
+      if (!adCodeOrLink || adCodeOrLink.trim() === "") return;
+
+      let trimmed = adCodeOrLink.trim();
+
+      // Ensure protocol relative URLs like //libtl.com get https:
+      if (trimmed.startsWith("//")) {
+        trimmed = "https:" + trimmed;
+      }
+
+      // Direct Link Check
+      if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        window.open(trimmed, '_blank');
+        return;
+      }
+
+      // HTML Script Embed (Monetag/In-Page) handling
+      try {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = trimmed;
+        
+        const scripts = tempDiv.querySelectorAll('script');
+        if (scripts.length > 0) {
+          scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            
+            // Extract attributes like data-zone, data-sdk
+            let dataSdkFunc = oldScript.getAttribute('data-sdk');
+
+            Array.from(oldScript.attributes).forEach(attr => {
+              newScript.setAttribute(attr.name, attr.value);
+            });
+
+            if (oldScript.src) {
+              let srcUrl = oldScript.src;
+              if (srcUrl.startsWith("//")) srcUrl = "https:" + srcUrl;
+              newScript.src = srcUrl;
+              newScript.async = true;
+
+              newScript.onload = () => {
+                // If data-sdk function is specified (e.g. show_11616602) trigger it immediately
+                if (dataSdkFunc && typeof window[dataSdkFunc] === 'function') {
+                  window[dataSdkFunc]();
+                } else {
+                  if (typeof window.show_883920 === 'function') window.show_883920();
+                  if (typeof window.show_rewarded_ad === 'function') window.show_rewarded_ad();
+                }
+              };
+            } else {
+              newScript.textContent = oldScript.textContent || oldScript.innerHTML;
+            }
+
+            document.body.appendChild(newScript);
+
+            // Execute function if already present in scope
+            if (dataSdkFunc && typeof window[dataSdkFunc] === 'function') {
+              window[dataSdkFunc]();
+            }
+          });
+        } else {
+          document.getElementById('globalAdContainer').appendChild(tempDiv);
+        }
+
+        // Global Monetag / Rewarded fallback invocations
+        if (typeof window.show_883920 === 'function') window.show_883920();
+        if (typeof window.show_rewarded_ad === 'function') window.show_rewarded_ad();
+
+      } catch (e) {
+        console.error("Ad script execution error:", e);
+      }
+    }
+
+    // HELPER FUNCTION FOR DYNAMIC NOTICE UPDATE
+    function updateNoticeUI(noticeMessage) {
+      if (!noticeMessage || String(noticeMessage).trim() === "") return;
+      const text = String(noticeMessage).trim();
+      
+      const scrollingNoticeText = document.getElementById('scrollingNoticeText');
+      const welcomeNoticeText = document.getElementById('welcomeNoticeText');
+      
+      if (scrollingNoticeText) scrollingNoticeText.innerText = text;
+      if (welcomeNoticeText) welcomeNoticeText.innerText = text;
+    }
+
+    // BELL NOTICE BUTTON ACTION - Triggers UI Modal
+    function showBellNotice() {
+      toggleModal('welcomePopupModal', true);
+    }
+
+    // HELPER FUNCTION FOR DYNAMIC NOTICE SPEED
+    function updateNoticeSpeed(speed) {
+      if (!speed) return;
+      const numSpeed = parseFloat(speed);
+      if (!isNaN(numSpeed) && numSpeed > 0) {
+        adminSettings.noticeSpeed = numSpeed;
+        document.documentElement.style.setProperty('--notice-speed', numSpeed + 's');
+      }
+    }
+
+    // Listen to Admin Settings Changes Realtime
+    database.ref('settings').on('value', (snapshot) => {
+      const settings = snapshot.val();
+      if (settings) {
+        if (settings.adReward !== undefined) adminSettings.adReward = parseFloat(settings.adReward) || 0;
+        if (settings.spinReward !== undefined) adminSettings.spinReward = parseFloat(settings.spinReward) || 0;
+        if (settings.scratchReward !== undefined) adminSettings.scratchReward = parseFloat(settings.scratchReward) || 0;
+        if (settings.dailyBonus !== undefined) adminSettings.dailyBonus = parseFloat(settings.dailyBonus) || 0;
+        
+        if (settings.minWithdraw !== undefined) {
+          adminSettings.minWithdraw = parseFloat(settings.minWithdraw) || 0;
+        }
+
+        // Limits mapping from Firebase (checking multiple possible key names)
+        const parsedAdLimit = settings.adLimit !== undefined ? settings.adLimit : (settings.watchAdsLimit !== undefined ? settings.watchAdsLimit : settings.dailyWatchAdsLimit);
+        if (parsedAdLimit !== undefined) adminSettings.adLimit = parseInt(parsedAdLimit) || 0;
+
+        const parsedSpinLimit = settings.spinLimit !== undefined ? settings.spinLimit : settings.dailySpinLimit;
+        if (parsedSpinLimit !== undefined) adminSettings.spinLimit = parseInt(parsedSpinLimit) || 0;
+
+        const parsedScratchLimit = settings.scratchLimit !== undefined ? settings.scratchLimit : settings.dailyScratchLimit;
+        if (parsedScratchLimit !== undefined) adminSettings.scratchLimit = parseInt(parsedScratchLimit) || 0;
+
+        if (settings.taskLimit !== undefined) adminSettings.taskLimit = parseInt(settings.taskLimit) || (settings.dailyTaskLimit ? parseInt(settings.dailyTaskLimit) : 10);
+
+        // SYNC TASK COOLDOWN / BREAK TIME / BACKTIME FROM ADMIN
+        const cooldownVal = settings.taskCooldown !== undefined ? settings.taskCooldown : (settings.breakTime !== undefined ? settings.breakTime : (settings.cooldown !== undefined ? settings.cooldown : (settings.taskBreakTime !== undefined ? settings.taskBreakTime : settings.backTime)));
+        if (cooldownVal !== undefined) {
+          adminSettings.taskCooldown = parseFloat(cooldownVal) || 0;
+        }
+
+        // --- FIXED DYNAMIC TIMERS READ FROM ADMIN PANEL (Support All Key Variations) ---
+        const rawWatchTimer = settings.watchAdsTimer !== undefined ? settings.watchAdsTimer : (settings.adTimer !== undefined ? settings.adTimer : (settings.watchAdTimer !== undefined ? settings.watchAdTimer : (settings.adsTimer !== undefined ? settings.adsTimer : (settings.ad_timer !== undefined ? settings.ad_timer : settings.watch_timer))));
+        if (rawWatchTimer !== undefined && !isNaN(parseInt(rawWatchTimer))) {
+          adminSettings.adTimer = parseInt(rawWatchTimer);
+        }
+
+        const rawSpinTimer = settings.spinTimer !== undefined ? settings.spinTimer : (settings.spinWheelTimer !== undefined ? settings.spinWheelTimer : (settings.wheelTimer !== undefined ? settings.wheelTimer : settings.spin_timer));
+        if (rawSpinTimer !== undefined && !isNaN(parseInt(rawSpinTimer))) {
+          adminSettings.spinTimer = parseInt(rawSpinTimer);
+        }
+
+        const rawScratchTimer = settings.scratchTimer !== undefined ? settings.scratchTimer : (settings.scratchCardTimer !== undefined ? settings.scratchCardTimer : (settings.cardTimer !== undefined ? settings.cardTimer : settings.scratch_timer));
+        if (rawScratchTimer !== undefined && !isNaN(parseInt(rawScratchTimer))) {
+          adminSettings.scratchTimer = parseInt(rawScratchTimer);
+        }
+
+        if (settings.taskTimer !== undefined && !isNaN(parseInt(settings.taskTimer))) {
+          adminSettings.taskTimer = parseInt(settings.taskTimer);
+        }
+
+        // SYNC BANNERS FROM ADMIN
+        const bannersData = settings.banners || settings.bannerList || settings.banner || settings.slider;
+        if (bannersData) {
+          renderDynamicBanners(bannersData);
+        }
+
+        // Dynamically Update Notice Speed from Admin Panel Settings
+        const speedVal = settings.noticeSpeed || settings.notice_speed || settings.scrollSpeed || settings.tickerSpeed;
+        if (speedVal) {
+          updateNoticeSpeed(speedVal);
+        }
+
+        if (settings.adScriptWatch !== undefined) adminSettings.adScriptWatch = settings.adScriptWatch;
+        if (settings.adScriptSpin !== undefined) adminSettings.adScriptSpin = settings.adScriptSpin;
+        if (settings.adScriptScratch !== undefined) adminSettings.adScriptScratch = settings.adScriptScratch;
+        if (settings.adScriptTask !== undefined) adminSettings.adScriptTask = settings.adScriptTask;
+        if (settings.adScriptTaskCode !== undefined) adminSettings.adScriptTask = settings.adScriptTaskCode;
+        if (settings.taskAdScript !== undefined) adminSettings.adScriptTask = settings.taskAdScript;
+        
+        if (settings.adScriptGlobal !== undefined && settings.adScriptGlobal !== adminSettings.adScriptGlobal) {
+          adminSettings.adScriptGlobal = settings.adScriptGlobal;
+          document.getElementById('globalAdContainer').innerHTML = "";
+          triggerAdNetwork(adminSettings.adScriptGlobal);
+        }
+
+        document.getElementById('displayAdReward').innerText = adminSettings.adReward.toFixed(2);
+        document.getElementById('displaySpinReward').innerText = adminSettings.spinReward.toFixed(2);
+        document.getElementById('displayScratchReward').innerText = adminSettings.scratchReward.toFixed(2);
+        document.getElementById('displayDailyBonus').innerText = adminSettings.dailyBonus.toFixed(2);
+        
+        document.getElementById('displayMinWithdraw').innerText = adminSettings.minWithdraw.toFixed(2);
+        document.getElementById('withdrawAmount').placeholder = adminSettings.minWithdraw.toFixed(2);
+
+        document.getElementById('scratchAmountText').innerText = "৳ " + adminSettings.scratchReward.toFixed(2);
+
+        updateUI();
+        renderTasks();
+
+        const maintenanceOverlay = document.getElementById('maintenanceOverlay');
+        if (settings.maintenance) {
+          maintenanceOverlay.style.display = 'flex';
+        } else {
+          maintenanceOverlay.style.display = 'none';
+        }
+
+        const noticeMessage = (typeof settings === 'string') ? settings : 
+          (settings.announcement || settings.notice || settings.scrollingNotice || settings.scrollingText || 
+           settings.ticker || settings.noticeText || settings.welcomeNotice || settings.appNotice || 
+           settings.notice_text || settings.message || settings.msg);
+        
+        if (noticeMessage) {
+          updateNoticeUI(noticeMessage);
+        }
+      }
+    });
+
+    // DIRECT LISTENERS FOR SEPARATE BANNERS NODE IN FIREBASE
+    database.ref('banners').on('value', (snapshot) => {
+      const val = snapshot.val();
+      if (val) {
+        renderDynamicBanners(val);
+      }
+    });
+
+    database.ref('bannerList').on('value', (snapshot) => {
+      const val = snapshot.val();
+      if (val) {
+        renderDynamicBanners(val);
+      }
+    });
+
+    // DIRECT LISTENERS FOR SEPARATE NOTICE NODES IN FIREBASE
+    database.ref('notice').on('value', (snapshot) => {
+      const val = snapshot.val();
+      if (val) {
+        const msg = (typeof val === 'object') ? (val.text || val.notice || val.message || val.announcement) : val;
+        updateNoticeUI(msg);
+        if (typeof val === 'object' && (val.speed || val.noticeSpeed)) {
+          updateNoticeSpeed(val.speed || val.noticeSpeed);
+        }
+      }
+    });
+
+    database.ref('announcement').on('value', (snapshot) => {
+      const val = snapshot.val();
+      if (val) {
+        const msg = (typeof val === 'object') ? (val.text || val.notice || val.message || val.announcement) : val;
+        updateNoticeUI(msg);
+      }
+    });
+
+    // Synchronize Logged in User Data
+    function initUserDatabaseSync() {
+      if (!userRef) return;
+
+      userRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          userState = { ...userState, ...data };
+          if (!userState.taskLastTimes) userState.taskLastTimes = {};
+
+          const today = getTodayDateStr();
+          if (userState.lastActiveDate !== today) {
+            userState.todayAdCount = 0;
+            userState.todaySpinCount = 0;
+            userState.todayScratchCount = 0;
+            userState.todayTaskCount = 0;
+            userState.dailyClaimed = false;
+            userState.completedTasks = {};
+            userState.taskLastTimes = {};
+            userState.lastActiveDate = today;
+            userRef.update({
+              todayAdCount: 0,
+              todaySpinCount: 0,
+              todayScratchCount: 0,
+              todayTaskCount: 0,
+              dailyClaimed: false,
+              completedTasks: {},
+              taskLastTimes: {},
+              lastActiveDate: today
+            });
+          }
+
+          updateUI();
+          renderTasks(); // Re-render tasks when userState completedTasks or cooldown updates
+        }
+      });
+    }
+
+    // Global variable to store active tasks list
+    let allTasksData = {};
+
+    // Load Realtime Transactions/Withdrawals History for Active User
+    function loadUserWithdrawals() {
+      if (!currentUserId) return;
+      database.ref('withdrawals/' + currentUserId).on('value', (snapshot) => {
+        const history = document.getElementById('transHistory');
+        const withdrawals = snapshot.val();
+        if (!withdrawals) {
+          history.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">এখনো কোনো ট্রানজেকশন হয়নি</p>`;
+          return;
+        }
+
+        let html = '';
+        const list = Object.values(withdrawals).reverse();
+        list.forEach(item => {
+          let color = '#f59e0b';
+          if (item.status === 'Approved' || item.status === 'Success') color = '#10b981';
+          if (item.status === 'Rejected') color = '#ef4444';
+
+          html += `<div style="display:flex; justify-content:space-between; font-size:0.8rem; padding: 6px 0; border-bottom: 1px solid var(--card-border);">
+            <span>${item.method} (${item.account})</span>
+            <span style="color:${color}; font-weight: bold;">${item.status || 'Pending'} ৳${parseFloat(item.amount || 0).toFixed(2)}</span>
+          </div>`;
+        });
+
+        history.innerHTML = html;
+      });
+    }
+
+    // Fetch Tasks Realtime (Admin Sync Enabled)
+    database.ref('tasks').on('value', (snapshot) => {
+      allTasksData = snapshot.val() || {};
+      renderTasks();
+    });
+
+    // Variable to check if an active task timer is running right now
+    let isRunningTaskTimer = false;
+
+    // Helper: calculate task cooldown in seconds
+    function getTaskCooldownSec(task) {
+      let val = 0;
+      if (task) {
+        if (task.cooldown !== undefined) val = task.cooldown;
+        else if (task.breakTime !== undefined) val = task.breakTime;
+        else if (task.backTime !== undefined) val = task.backTime;
+        else if (task.taskCooldown !== undefined) val = task.taskCooldown;
+      }
+      if (!val) {
+        val = adminSettings.taskCooldown || 0;
+      }
+      val = parseFloat(val) || 0;
+      // If setting value is small (e.g. <= 10), assume it's set in minutes, otherwise seconds
+      return val <= 10 ? val * 60 : val;
+    }
+
+    // Render Tasks based on stored database state & Full Box Click Handle
+    function renderTasks() {
+      const userTaskList = document.getElementById('userTaskList');
+      if (!userTaskList) return;
+
+      if (taskCooldownInterval) {
+        clearInterval(taskCooldownInterval);
+        taskCooldownInterval = null;
+      }
+
+      userTaskList.innerHTML = '';
+
+      const taskKeys = Object.keys(allTasksData);
+      const totalTasks = taskKeys.length;
+      
+      const completedCount = userState.todayTaskCount || 0;
+      const maxTaskLimit = adminSettings.taskLimit || (totalTasks > 0 ? totalTasks : 10);
+      
+      const progressText = `${toBengaliDigits(completedCount)}/${toBengaliDigits(maxTaskLimit)}`;
+      const progressBadge = document.getElementById('taskProgressBadge');
+      if (progressBadge) progressBadge.innerText = progressText;
+
+      if (totalTasks === 0) {
+        userTaskList.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">বর্তমানে কোনো একটিভ টাস্ক পাওয়া যায়নি</p>`;
+        return;
+      }
+
+      const now = Date.now();
+      let hasAnyCooldownRunning = false;
+
+      let index = 1;
+      taskKeys.forEach(taskId => {
+        const task = allTasksData[taskId];
+        const isLimitReached = (userState.todayTaskCount || 0) >= adminSettings.taskLimit;
+
+        // **স্বতন্ত্র টাস্ক ব্যাকটাইম হিসাব:** শুধুমাত্র এই নির্দিষ্ট টাস্কের লাস্ট টাইম ব্যবহার করা
+        const lastTimeForThisTask = (userState.taskLastTimes && userState.taskLastTimes[taskId]) ? userState.taskLastTimes[taskId] : 0;
+        const timePassedSec = Math.floor((now - lastTimeForThisTask) / 1000);
+
+        const cooldownSec = getTaskCooldownSec(task);
+        const remainingCooldownSec = Math.max(0, cooldownSec - timePassedSec);
+
+        if (remainingCooldownSec > 0) {
+          hasAnyCooldownRunning = true;
+        }
+
+        const isCoolingDown = remainingCooldownSec > 0;
+        
+        // **সঠিক লজিক চেক:** Cooldown চলাকালীন অবস্থায় Completed স্ট্যাটাস ক্লিয়ার রাখা
+        let isDone = userState.completedTasks && userState.completedTasks[taskId] === true;
+        if (!isCoolingDown && isDone) {
+          // Cooldown শেষ হলে Local State ও Firebase থেকে completedTasks ক্লিয়ার করে দেওয়া যাতে পুনরায় করা যায়
+          if (userState.completedTasks) delete userState.completedTasks[taskId];
+          if (userRef) database.ref(`users/${currentUserId}/completedTasks/${taskId}`).remove();
+          isDone = false;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'glass-card';
+        
+        const taskTitle = task.title || 'নতুন টাস্ক';
+        const taskDesc = task.description || task.desc || task.details || 'টাস্কটি সম্পন্ন করে আয় করুন';
+        const taskLink = task.link || task.url || '';
+        const taskReward = parseFloat(task.reward || 0);
+        
+        let taskTimerRaw = task.timer !== undefined ? task.timer : (task.taskTimer !== undefined ? task.taskTimer : (task.duration !== undefined ? task.duration : task.time));
+        let taskTimer = parseInt(taskTimerRaw);
+        if (isNaN(taskTimer)) {
+          taskTimer = parseInt(adminSettings.taskTimer) || 0;
+        }
+
+        let buttonText = 'Complete Task';
+        let buttonDisabled = false;
+        let buttonStyle = '';
+
+        // **সঠিক স্ট্যাটাস অগ্রাধিকার লজিক**
+        if (isLimitReached) {
+          buttonText = 'Limit Over';
+          buttonDisabled = true;
+          buttonStyle = 'background: #4b5563;';
+        } else if (isCoolingDown && !isRunningTaskTimer) {
+          // যদি এডমিন ব্যাকটাইম সেট করে তবে কাউন্টডাউন টাইমার দেখাবে
+          buttonText = `Wait (${toBengaliDigits(remainingCooldownSec)}s)`;
+          buttonDisabled = true;
+          buttonStyle = 'background: #b45309;';
+        } else if (isDone) {
+          buttonText = 'Completed';
+          buttonDisabled = true;
+          buttonStyle = 'background: #4b5563;';
+        }
+
+        card.style.cursor = (buttonDisabled || isRunningTaskTimer) ? 'default' : 'pointer';
+
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <h4>${taskTitle}</h4>
+            <span style="font-size: 0.75rem; background: rgba(168, 85, 247, 0.2); color: #a855f7; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
+              টাস্ক ${toBengaliDigits(index)}/${toBengaliDigits(totalTasks)}
+            </span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 6px 0;">${taskDesc}</p>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--accent-green); font-weight: bold;">+ ৳ ${taskReward.toFixed(2)}</span>
+            <button class="btn-primary task-act-btn" style="width: auto; padding: 6px 16px; ${buttonStyle}" ${buttonDisabled ? 'disabled' : ''}>
+              ${buttonText}
+            </button>
+          </div>
+        `;
+
+        // Add Click Listener
+        card.onclick = (e) => {
+          const btn = card.querySelector('.task-act-btn');
+          if (isRunningTaskTimer) return;
+
+          if (isCoolingDown && !isDone && !isLimitReached) {
+            alert(`অনুগ্রহ করে এই টাস্কটির জন্য অপেক্ষা করুন! ব্যাকটাইম চলছে...`);
+            return;
+          }
+          if (!isDone && !isLimitReached && !isCoolingDown && btn && !btn.disabled) {
+            handleTaskAction(btn, taskId, taskReward, encodeURIComponent(taskLink), taskTimer);
+          }
+        };
+
+        userTaskList.appendChild(card);
+        index++;
+      });
+
+      // REAL-TIME INDIVIDUAL BACKTIME / COOLDOWN COUNTDOWN INTERVAL FOR WAIT TIME DISPLAY
+      if (hasAnyCooldownRunning && !isRunningTaskTimer) {
+        taskCooldownInterval = setInterval(() => {
+          const cooldownBtns = document.querySelectorAll('.task-act-btn');
+          const currentNow = Date.now();
+          let stillCooling = false;
+
+          taskKeys.forEach((taskId, idx) => {
+            const task = allTasksData[taskId];
+            const isLimitReached = (userState.todayTaskCount || 0) >= adminSettings.taskLimit;
+            const b = cooldownBtns[idx];
+
+            const lastTime = (userState.taskLastTimes && userState.taskLastTimes[taskId]) ? userState.taskLastTimes[taskId] : 0;
+            const tPassedSec = Math.floor((currentNow - lastTime) / 1000);
+
+            const cSec = getTaskCooldownSec(task);
+            const remSec = Math.max(0, cSec - tPassedSec);
+
+            if (remSec > 0) stillCooling = true;
+
+            if (b && !isLimitReached && !isRunningTaskTimer) {
+              if (remSec > 0) {
+                b.innerText = `Wait (${toBengaliDigits(remSec)}s)`;
+                b.disabled = true;
+                b.style.background = '#b45309';
+              } else if (b.innerText.startsWith('Wait')) {
+                b.innerText = 'Complete Task';
+                b.disabled = false;
+                b.style.background = '';
+              }
+            }
+          });
+
+          if (!stillCooling) {
+            clearInterval(taskCooldownInterval);
+            taskCooldownInterval = null;
+            renderTasks();
+          }
+        }, 1000);
+      }
+    }
+
+    // Handle Admin Created Tasks (Link + Timer + Reward + Ad Trigger Fix)
+    function handleTaskAction(btn, taskId, reward, encodedLink, timerSec) {
+      if (!btn || btn.disabled || isRunningTaskTimer) return;
+
+      // Check daily task completion limit set by admin
+      if ((userState.todayTaskCount || 0) >= adminSettings.taskLimit) {
+        alert("আজকের টাস্ক পূরণের সীমা শেষ! আগামীকাল আবার চেষ্টা করুন।");
+        return;
+      }
+
+      // Check Cooldown / Backtime Time before starting specific task
+      const currentTask = allTasksData[taskId];
+      const cooldownSec = getTaskCooldownSec(currentTask);
+      const now = Date.now();
+      const lastTimeForThisTask = (userState.taskLastTimes && userState.taskLastTimes[taskId]) ? userState.taskLastTimes[taskId] : 0;
+      const timePassedSec = Math.floor((now - lastTimeForThisTask) / 1000);
+
+      if (cooldownSec > 0 && timePassedSec < cooldownSec) {
+        const remainingSec = cooldownSec - timePassedSec;
+        alert(`পরবর্তী টাস্কটি করতে অনুগ্রহ করে ${toBengaliDigits(remainingSec)} সেকেন্ড অপেক্ষা করুন!`);
+        return;
+      }
+
+      // Ensure task isn't already marked done in state
+      if (userState.completedTasks && userState.completedTasks[taskId] === true) {
+        btn.disabled = true;
+        btn.innerText = "Completed";
+        btn.style.background = "#4b5563";
+        return;
+      }
+
+      // 💥 💥 💥 Trigger Task Specific Ad OR Watch Ad Script Set By Admin 💥 💥 💥
+      const taskAdCode = (currentTask && (currentTask.adCode || currentTask.adScript || currentTask.ad)) 
+                          || adminSettings.adScriptTask 
+                          || adminSettings.adScriptWatch;
+      
+      if (taskAdCode) {
+        triggerAdNetwork(taskAdCode);
+      }
+
+      const link = decodeURIComponent(encodedLink || '');
+      reward = parseFloat(reward) || 0;
+      
+      // Parse Admin dynamic task timer duration accurately
+      timerSec = parseInt(timerSec);
+      if (isNaN(timerSec) || timerSec <= 0) {
+        timerSec = parseInt(adminSettings.taskTimer) || 10;
+      }
+
+      btn.disabled = true;
+      isRunningTaskTimer = true;
+
+      if (taskCooldownInterval) {
+        clearInterval(taskCooldownInterval);
+        taskCooldownInterval = null;
+      }
+
+      // Open Task Link / Telegram in new tab if link exists
+      if (link && link.trim() !== "") {
+        let validUrl = link.trim();
+        if (!validUrl.startsWith("http://") && !validUrl.startsWith("https://")) {
+          validUrl = "https://" + validUrl;
+        }
+        try {
+          window.open(validUrl, '_blank');
+        } catch(e) {
+          console.error("Window open error:", e);
+        }
+      }
+
+      // Live Countdown Timer Operation
+      let remainingTime = timerSec;
+      btn.style.opacity = "0.8";
+      btn.innerText = `⏳ (${toBengaliDigits(remainingTime)}s)`;
+
+      const timerInterval = setInterval(() => {
+        remainingTime--;
+        if (remainingTime > 0) {
+          btn.innerText = `⏳ (${toBengaliDigits(remainingTime)}s)`;
+        } else {
+          clearInterval(timerInterval);
+          isRunningTaskTimer = false;
+          finalizeTaskCompletion(btn, taskId, reward);
+        }
+      }, 1000);
+    }
+
+    // Finalize Task Completion with Persistent Storage & Sync to Admin Node
+    function finalizeTaskCompletion(btn, taskId, reward) {
+      if (!currentUserId || !userRef) {
+        alert("ইউজার সেশন পাওয়া যায়নি। অনুগ্রহ করে পুনরায় লগইন করুন।");
+        return;
+      }
+
+      // Already completed check
+      if (userState.completedTasks && userState.completedTasks[taskId] === true) {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerText = "Completed";
+          btn.style.background = "#4b5563";
+          btn.style.opacity = "1";
+        }
+        return;
+      }
+
+      if (!userState.completedTasks) userState.completedTasks = {};
+      if (!userState.taskLastTimes) userState.taskLastTimes = {};
+
+      userState.completedTasks[taskId] = true;
+
+      const numReward = parseFloat(reward) || 0;
+      const completionTime = Date.now();
+
+      // **শুধুমাত্র এই নির্দিষ্ট টাস্কটির জন্য সময় আপডেট করা**
+      userState.taskLastTimes[taskId] = completionTime;
+
+      // Update local state balances, scratchCards, taskCount
+      userState.balance = (parseFloat(userState.balance) || 0) + numReward;
+      userState.todayEarned = (parseFloat(userState.todayEarned) || 0) + numReward;
+      userState.scratchCards = (parseInt(userState.scratchCards) || 0) + 1;
+      userState.todayTaskCount = (parseInt(userState.todayTaskCount) || 0) + 1;
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "Completed";
+        btn.style.background = "#4b5563";
+        btn.style.opacity = "1";
+      }
+
+      // Direct Firebase node update to ensure real-time balance, scratchCards, todayTaskCount, individual taskLastTimes & status save
+      const updates = {};
+      updates['balance'] = userState.balance;
+      updates['todayEarned'] = userState.todayEarned;
+      updates['scratchCards'] = userState.scratchCards;
+      updates['todayTaskCount'] = userState.todayTaskCount;
+      updates['taskLastTimes/' + taskId] = completionTime;
+      updates['completedTasks/' + taskId] = true;
+
+      // 1. Save data under user profile
+      userRef.update(updates).then(() => {
+        // 2. Also send data to admin view node (taskCompletions)
+        const taskTitle = (allTasksData[taskId] && allTasksData[taskId].title) ? allTasksData[taskId].title : 'Task Completion';
+        
+        database.ref('taskCompletions').push({
+          userId: currentUserId,
+          userName: userState.name || 'ইউজার',
+          userEmail: userState.email || '',
+          taskId: taskId,
+          taskTitle: taskTitle,
+          reward: numReward,
+          completedAt: new Date().toISOString()
+        });
+
+        // 3. Mark completion count directly inside the specific task node for admin
+        database.ref('tasks/' + taskId + '/completions/' + currentUserId).set({
+          userName: userState.name || 'ইউজার',
+          userEmail: userState.email || '',
+          timestamp: new Date().toISOString()
+        });
+
+        updateUI();
+        renderTasks(); // Re-render to start break/cooldown time for this specific task
+        alert(`🎉 টাস্ক সম্পন্ন হয়েছে!\n\nআপনার ব্যালেন্সে ৳ ${numReward.toFixed(2)} এবং +১টি স্ক্র্যাচ কার্ড সফলভাবে যোগ করা হয়েছে।`);
+      }).catch((err) => {
+        console.error("Task update error:", err);
+        updateUI();
+        renderTasks();
+        alert(`🎉 টাস্ক সম্পন্ন হয়েছে! ৳ ${numReward.toFixed(2)} ও +১টি স্ক্র্যাচ কার্ড যোগ করা হয়েছে।`);
+      });
+    }
+
+    // Update UI Elements
+    function updateUI() {
+      const activeName = userState.name || "ইউজার";
+      const firstChar = activeName.charAt(0).toUpperCase();
+
+      document.getElementById('user-name').innerText = "স্বাগতম, " + activeName + "!";
+      document.getElementById('user-id').innerText = "ID: #" + (currentUserId ? currentUserId.substring(0,6).toUpperCase() : "883920");
+      document.getElementById('user-avatar-char').innerText = firstChar;
+      
+      if (document.getElementById('profile-name')) {
+        document.getElementById('profile-name').innerText = activeName;
+        document.getElementById('profile-avatar-char').innerText = firstChar;
+        document.getElementById('profile-email').innerText = userState.email || "user@mail.com";
+      }
+
+      if (document.getElementById('refCode')) {
+        document.getElementById('refCode').value = userState.refCode || "REF123456";
+      }
+
+      document.querySelectorAll('.active-user-display-name').forEach(el => {
+        el.innerText = activeName;
+      });
+
+      document.getElementById('main-balance').innerText = (userState.balance || 0).toFixed(2);
+      document.getElementById('today-earned').innerText = "৳ " + (userState.todayEarned || 0).toFixed(2);
+      document.getElementById('ref-earned').innerText = "৳ " + (userState.refEarned || 0).toFixed(2);
+      document.getElementById('scratchCoinDisplay').innerText = (userState.balance || 0).toFixed(2);
+      document.getElementById('cardCountVal').innerText = userState.scratchCards !== undefined ? userState.scratchCards : 3;
+
+      const adCountStr = `${toBengaliDigits(userState.todayAdCount || 0)}/${toBengaliDigits(adminSettings.adLimit)}`;
+      const spinCountStr = `${toBengaliDigits(userState.todaySpinCount || 0)}/${toBengaliDigits(adminSettings.spinLimit)}`;
+      const scratchCountStr = `${toBengaliDigits(userState.todayScratchCount || 0)}/${toBengaliDigits(adminSettings.scratchLimit)}`;
+
+      document.getElementById('displayAdLimit').innerText = adCountStr;
+      document.getElementById('displaySpinLimit').innerText = spinCountStr;
+      document.getElementById('displayScratchLimit').innerText = scratchCountStr;
+
+      document.getElementById('spinModalLimit').innerText = spinCountStr;
+      document.getElementById('scratchModalLimit').innerText = scratchCountStr;
+    }
+
+    // Update Earnings
+    function addEarnings(amount, type) {
+      if (!userRef) return;
+
+      userState.balance = (userState.balance || 0) + amount;
+      userState.todayEarned = (userState.todayEarned || 0) + amount;
+
+      if (type === 'ad') userState.todayAdCount = (userState.todayAdCount || 0) + 1;
+      if (type === 'spin') userState.todaySpinCount = (userState.todaySpinCount || 0) + 1;
+      if (type === 'scratch') userState.todayScratchCount = (userState.todayScratchCount || 0) + 1;
+      if (type === 'task') userState.todayTaskCount = (userState.todayTaskCount || 0) + 1;
+
+      userRef.update({
+        balance: userState.balance,
+        todayEarned: userState.todayEarned,
+        todayAdCount: userState.todayAdCount || 0,
+        todaySpinCount: userState.todaySpinCount || 0,
+        todayScratchCount: userState.todayScratchCount || 0,
+        todayTaskCount: userState.todayTaskCount || 0,
+        dailyClaimed: userState.dailyClaimed,
+        scratchCards: userState.scratchCards,
+        completedTasks: userState.completedTasks || {}
+      });
+    }
+
+    // Navigation Switcher
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      if (el) el.classList.add('active');
+    }
+
+    // Modal Control
+    function toggleModal(modalId, show) {
+      document.getElementById(modalId).style.display = show ? 'flex' : 'none';
+      if (modalId === 'scratchModal' && show) {
+        initScratchCanvas();
+      }
+    }
+
+    // Watch Ads Action (Home Tab)
+    function watchAd(btnElement) {
+      if ((userState.todayAdCount || 0) >= adminSettings.adLimit) {
+        alert("আজকের ওয়াচ এডস দেখার সীমা শেষ! আগামীকাল আবার চেষ্টা করুন।");
+        return;
+      }
+
+      triggerAdNetwork(adminSettings.adScriptWatch);
+
+      let timerDuration = parseInt(adminSettings.adTimer);
+      if (isNaN(timerDuration) || timerDuration <= 0) {
+        const reward = adminSettings.adReward;
+        addEarnings(reward, 'ad');
+        alert(`অভিনন্দন! আপনি ৳ ${reward.toFixed(2)} রিওয়ার্ড পেয়েছেন।`);
+        return;
+      }
+
+      let timeLeft = timerDuration;
+      const originalText = btnElement ? btnElement.innerText : "Earn Now";
+      if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.style.opacity = "0.7";
+        btnElement.innerText = `⏳ অপেক্ষা করুন (${toBengaliDigits(timeLeft)}s)`;
+      }
+
+      const timer = setInterval(() => {
+        timeLeft--;
+        if (btnElement && timeLeft >= 0) {
+          btnElement.innerText = `⏳ অপেক্ষা করুন (${toBengaliDigits(timeLeft)}s)`;
+        }
+
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          if (btnElement) {
+            btnElement.innerText = originalText;
+            btnElement.disabled = false;
+            btnElement.style.opacity = "1";
+          }
+          const reward = adminSettings.adReward;
+          addEarnings(reward, 'ad');
+          alert(`অভিনন্দন! আপনি ৳ ${reward.toFixed(2)} রিওয়ার্ড পেয়েছেন।`);
+        }
+      }, 1000);
+    }
+
+    // Daily Bonus Claim
+    function claimDailyBonus() {
+      if(userState.dailyClaimed) {
+        alert("আপনি আজকের দৈনিক বোনাস ইতোমধ্যে ক্লেইম করেছেন!");
+        return;
+      }
+      userState.dailyClaimed = true;
+      const reward = adminSettings.dailyBonus;
+      addEarnings(reward, 'daily');
+      alert(`দৈনিক বোনাস ৳ ${reward.toFixed(2)} সফলভাবে যোগ হয়েছে!`);
+    }
+
+    // Open Scratch Card UI
+    function openScratchCard() {
+      toggleModal('scratchModal', true);
+    }
+
+    // Interactive Scratch Canvas Logic
+    let scratchCanvas, scratchCtx, isScratching = false, cardScratched = false, isScratchTimerRunning = false;
+
+    function initScratchCanvas() {
+      scratchCanvas = document.getElementById('scratchCanvas');
+      if (!scratchCanvas) return;
+      scratchCtx = scratchCanvas.getContext('2d');
+      cardScratched = false;
+      isScratchTimerRunning = false;
+
+      const scratchTimerText = document.getElementById('scratchTimerText');
+      if (scratchTimerText) scratchTimerText.style.display = "none";
+
+      const rect = scratchCanvas.getBoundingClientRect();
+      scratchCanvas.width = rect.width;
+      scratchCanvas.height = rect.height;
+
+      scratchCtx.globalCompositeOperation = 'source-over';
+      const grad = scratchCtx.createLinearGradient(0, 0, scratchCanvas.width, scratchCanvas.height);
+      grad.addColorStop(0, '#d1d5db');
+      grad.addColorStop(0.5, '#9ca3af');
+      grad.addColorStop(1, '#6b7280');
+      scratchCtx.fillStyle = grad;
+      scratchCtx.fillRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+
+      scratchCtx.fillStyle = '#1f2937';
+      scratchCtx.font = 'bold 16px sans-serif';
+      scratchCtx.textAlign = 'center';
+      scratchCtx.fillText('SCRATCH HERE', scratchCanvas.width / 2, scratchCanvas.height / 2 + 5);
+
+      scratchCanvas.onmousedown = startScratch;
+      scratchCanvas.ontouchstart = startScratch;
+      scratchCanvas.onmousemove = scratchMove;
+      scratchCanvas.ontouchmove = scratchMove;
+      scratchCanvas.onmouseup = endScratch;
+      scratchCanvas.ontouchend = endScratch;
+    }
+
+    function startScratch(e) {
+      if (isScratchTimerRunning) return;
+
+      if ((userState.todayScratchCount || 0) >= adminSettings.scratchLimit) {
+        alert("আজকের স্ক্র্যাচ কার্ডের দৈনিক সীমা শেষ!");
+        return;
+      }
+
+      if ((userState.scratchCards || 0) <= 0) {
+        alert("আপনার কোনো স্ক্র্যাচ কার্ড বাকি নেই! 'Watch Ad' বা 'Complete Task' এ ক্লিক করে কার্ড তৈরি/বৃদ্ধি করে নিন।");
+        return;
+      }
+
+      if (cardScratched) {
+        initScratchCanvas();
+      }
+
+      isScratching = true;
+    }
+
+    function getScratchedPercentage() {
+      try {
+        const imageData = scratchCtx.getImageData(0, 0, scratchCanvas.width, scratchCanvas.height);
+        const pixels = imageData.data;
+        let transparent = 0;
+        const total = pixels.length / 4;
+        for (let i = 3; i < pixels.length; i += 16) {
+          if (pixels[i] < 128) {
+            transparent++;
+          }
+        }
+        return (transparent / (total / 4)) * 100;
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    function scratchMove(e) {
+      if (!isScratching || isScratchTimerRunning || cardScratched) return;
+      
+      const rect = scratchCanvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+
+      scratchCtx.globalCompositeOperation = 'destination-out';
+      scratchCtx.beginPath();
+      scratchCtx.arc(x, y, 22, 0, Math.PI * 2);
+      scratchCtx.fill();
+
+      if (getScratchedPercentage() >= 35) {
+        cardScratched = true;
+        isScratching = false;
+        isScratchTimerRunning = true;
+        
+        scratchCtx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+
+        userState.scratchCards = Math.max(0, (userState.scratchCards || 3) - 1);
+        const reward = adminSettings.scratchReward;
+
+        triggerAdNetwork(adminSettings.adScriptScratch);
+
+        let timerDuration = parseInt(adminSettings.scratchTimer);
+
+        const scratchTimerText = document.getElementById('scratchTimerText');
+
+        if (isNaN(timerDuration) || timerDuration <= 0) {
+          isScratchTimerRunning = false;
+          addEarnings(reward, 'scratch');
+          const activeWinText = document.getElementById('activeUserWinDisplay');
+          if (activeWinText) {
+            activeWinText.innerText = `Won ৳ ${reward.toFixed(2)}`;
+            activeWinText.style.color = "var(--accent-gold)";
+          }
+          updateUI();
+          alert(`🎉 YOU WIN!\n\nঅভিনন্দন ${userState.name || 'ইউজার'}! আপনি ৳ ${reward.toFixed(2)} রিওয়ার্ড পেয়েছেন!`);
+          
+          if ((userState.scratchCards || 0) > 0 && (userState.todayScratchCount || 0) < adminSettings.scratchLimit) {
+            initScratchCanvas();
+          }
+          return;
+        }
+
+        let timeLeft = timerDuration;
+        if (scratchTimerText) {
+          scratchTimerText.style.display = "block";
+          scratchTimerText.innerText = `⏳ বিজ্ঞাপন দেখা হচ্ছে... ${toBengaliDigits(timeLeft)} সেকেন্ড অপেক্ষা করুন`;
+        }
+
+        const scratchInterval = setInterval(() => {
+          timeLeft--;
+          if (scratchTimerText && timeLeft >= 0) {
+            scratchTimerText.innerText = `⏳ বিজ্ঞাপন দেখা হচ্ছে... ${toBengaliDigits(timeLeft)} সেকেন্ড অপেক্ষা করুন`;
+          }
+
+          if (timeLeft <= 0) {
+            clearInterval(scratchInterval);
+            isScratchTimerRunning = false;
+            if (scratchTimerText) scratchTimerText.style.display = "none";
+
+            addEarnings(reward, 'scratch');
+
+            const activeWinText = document.getElementById('activeUserWinDisplay');
+            if (activeWinText) {
+              activeWinText.innerText = `Won ৳ ${reward.toFixed(2)}`;
+              activeWinText.style.color = "var(--accent-gold)";
+            }
+
+            updateUI();
+            alert(`🎉 YOU WIN!\n\nঅভিনন্দন ${userState.name || 'ইউজার'}! আপনি ৳ ${reward.toFixed(2)} রিওয়ার্ড পেয়েছেন!`);
+
+            if ((userState.scratchCards || 0) > 0 && (userState.todayScratchCount || 0) < adminSettings.scratchLimit) {
+              initScratchCanvas();
+            }
+          }
+        }, 1000);
+      }
+    }
+
+    function endScratch() {
+      isScratching = false;
+    }
+
+    // Watch Ad For Scratch Card
+    function watchAdForCard(btnElement) {
+      triggerAdNetwork(adminSettings.adScriptWatch || adminSettings.adScriptScratch);
+
+      let timerDuration = parseInt(adminSettings.adTimer);
+
+      const scratchTimerText = document.getElementById('scratchTimerText');
+
+      if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.style.opacity = "0.6";
+      }
+
+      if (isNaN(timerDuration) || timerDuration <= 0) {
+        if (btnElement) {
+          btnElement.disabled = false;
+          btnElement.style.opacity = "1";
+        }
+        userState.scratchCards = (userState.scratchCards || 0) + 1;
+        if (userRef) userRef.update({ scratchCards: userState.scratchCards });
+        updateUI();
+        alert("অভিনন্দন! আপনি +১টি নতুন স্ক্র্যাচ কার্ড পেয়েছেন!");
+        initScratchCanvas();
+        return;
+      }
+
+      let timeLeft = timerDuration;
+      if (scratchTimerText) {
+        scratchTimerText.style.display = "block";
+        scratchTimerText.innerText = `⏳ বিজ্ঞাপন দেখা হচ্ছে... ${toBengaliDigits(timeLeft)} সেকেন্ড অপেক্ষা করুন`;
+      }
+
+      const cardTimer = setInterval(() => {
+        timeLeft--;
+        if (scratchTimerText && timeLeft >= 0) {
+          scratchTimerText.innerText = `⏳ বিজ্ঞাপন দেখা হচ্ছে... ${toBengaliDigits(timeLeft)} সেকেন্ড অপেক্ষা করুন`;
+        }
+
+        if (timeLeft <= 0) {
+          clearInterval(cardTimer);
+          if (scratchTimerText) scratchTimerText.style.display = "none";
+          if (btnElement) {
+            btnElement.disabled = false;
+            btnElement.style.opacity = "1";
+          }
+          
+          userState.scratchCards = (userState.scratchCards || 0) + 1;
+          if (userRef) userRef.update({ scratchCards: userState.scratchCards });
+          updateUI();
+          alert("অভিনন্দন! আপনি +১টি নতুন স্ক্র্যাচ কার্ড পেয়েছেন!");
+          
+          initScratchCanvas();
+        }
+      }, 1000);
+    }
+
+    function goToTasksFromScratch() {
+      toggleModal('scratchModal', false);
+      const taskNavBtn = document.querySelectorAll('.nav-item')[1];
+      switchTab('tasksTab', taskNavBtn);
+    }
+
+    // COPY REFERRAL CODE ONLY
+    function copyReferral() {
+      const code = userState.refCode || "REF123456";
+      copyTextToClipboard(code, "রেফারেল কোড কপি করা হয়েছে!");
+    }
+
+    // SHARE REFERRAL
+    function shareReferral() {
+      const code = userState.refCode || "REF123456";
+      const pageUrl = window.location.origin + window.location.pathname;
+      const shareText = `💎 Premium Earning Platform-এ জয়েন করুন এবং প্রতিদিন ইনকাম করুন!\n\nআমার রেফারেল কোড: ${code}\nঅ্যাপ লিংক: ${pageUrl}`;
+
+      if (navigator.share) {
+        navigator.share({
+          title: 'Premium Earning Platform',
+          text: shareText,
+          url: pageUrl
+        }).catch((err) => {
+          copyTextToClipboard(shareText, "রেফারেল লিংক ও মেসেজ কপি করা হয়েছে! এখন যেকোনো সোশ্যাল মিডিয়ায় পেস্ট করে শেয়ার করুন।");
+        });
+      } else {
+        copyTextToClipboard(shareText, "রেফারেল লিংক ও মেসেজ কপি করা হয়েছে! এখন যেকোনো সোশ্যাল মিডিয়ায় পেস্ট করে শেয়ার করুন।");
+      }
+    }
+
+    // Helper Function for Cross-Browser Text Copying
+    function copyTextToClipboard(text, successMsg) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert(successMsg);
+        }).catch(() => {
+          fallbackCopyText(text, successMsg);
+        });
+      } else {
+        fallbackCopyText(text, successMsg);
+      }
+    }
+
+    function fallbackCopyText(text, successMsg) {
+      const tempInput = document.createElement("textarea");
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+      alert(successMsg);
+    }
+
+    // SUBMIT WITHDRAWAL REQUEST
+    function requestWithdrawal() {
+      if (!currentUserId) return;
+
+      const acc = document.getElementById('withdrawAcc').value.trim();
+      const amount = parseFloat(document.getElementById('withdrawAmount').value);
+      const method = document.getElementById('withdrawMethod').value;
+
+      if(!acc || isNaN(amount)) {
+        alert("সঠিক তথ্য প্রদান করুন!");
+        return;
+      }
+
+      const minLimit = adminSettings.minWithdraw || 50.00;
+      if(amount < minLimit) {
+        alert(`সর্বনিম্ন উত্তোলন ৳ ${minLimit.toFixed(2)}`);
+        return;
+      }
+
+      if(amount > userState.balance) {
+        alert("পর্যাপ্ত ব্যালেন্স নেই!");
+        return;
+      }
+
+      userState.balance -= amount;
+
+      const withdrawalRef = database.ref('withdrawals/' + currentUserId).push();
+      withdrawalRef.set({
+        account: acc,
+        amount: amount,
+        method: method,
+        status: 'Pending',
+        timestamp: new Date().toISOString()
+      });
+
+      if (userRef) userRef.update({ balance: userState.balance });
+
+      document.getElementById('withdrawAcc').value = '';
+      document.getElementById('withdrawAmount').value = '';
+
+      alert("উত্তোলন রিকোয়েস্ট সফল হয়েছে!");
+    }
+
+    // Spin Wheel Canvas Implementation
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const segments = ['WIN', 'BONUS', 'TRY AGAIN', 'WIN', 'LUCKY', 'JACKPOT'];
+    const colors = ['#6366f1', '#a855f7', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
+
+    function drawWheel() {
+      const numSegments = segments.length;
+      const angle = (2 * Math.PI) / numSegments;
+
+      for (let i = 0; i < numSegments; i++) {
+        ctx.beginPath();
+        ctx.fillStyle = colors[i];
+        ctx.moveTo(125, 125);
+        ctx.arc(125, 125, 125, i * angle, (i + 1) * angle);
+        ctx.fill();
+
+        ctx.save();
+        ctx.fillStyle = "#fff";
+        ctx.translate(125, 125);
+        ctx.rotate(i * angle + angle / 2);
+        ctx.textAlign = "right";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText(segments[i], 110, 5);
+        ctx.restore();
+      }
+    }
+    drawWheel();
+
+    let spinning = false;
+    let currentSpinRotation = 0;
+
+    function startSpin() {
+      if ((userState.todaySpinCount || 0) >= adminSettings.spinLimit) {
+        alert("আজকের স্পিন খেলার দৈনিক সীমা শেষ!");
+        return;
+      }
+
+      if (spinning) return;
+      spinning = true;
+
+      const spinBtn = document.getElementById('spinBtn');
+      const timerText = document.getElementById('spinTimerText');
+
+      if (spinBtn) {
+        spinBtn.disabled = true;
+        spinBtn.style.opacity = "0.5";
+      }
+
+      triggerAdNetwork(adminSettings.adScriptSpin);
+
+      currentSpinRotation += 1440 + Math.floor(Math.random() * 360);
+      canvas.style.transform = `rotate(${currentSpinRotation}deg)`;
+
+      setTimeout(() => {
+        let timerDuration = parseInt(adminSettings.spinTimer);
+
+        if (isNaN(timerDuration) || timerDuration <= 0) {
+          spinning = false;
+          if (spinBtn) {
+            spinBtn.disabled = false;
+            spinBtn.style.opacity = "1";
+          }
+          const reward = adminSettings.spinReward;
+          addEarnings(reward, 'spin');
+          alert(`🎉 YOU WIN!\n\nঅভিনন্দন! আপনি স্পিন করে ৳ ${reward.toFixed(2)} রিওয়ার্ড পেয়েছেন!`);
+          return;
+        }
+
+        let timeLeft = timerDuration;
+
+        if (timerText) {
+          timerText.style.display = "block";
+          timerText.innerText = `⏳ বিজ্ঞাপন দেখা হচ্ছে... ${toBengaliDigits(timeLeft)} সেকেন্ড অপেক্ষা করুন`;
+        }
+
+        const countdownInterval = setInterval(() => {
+          timeLeft--;
+
+          if (timerText && timeLeft >= 0) {
+            timerText.innerText = `⏳ বিজ্ঞাপন দেখা হচ্ছে... ${toBengaliDigits(timeLeft)} সেকেন্ড অপেক্ষা করুন`;
+          }
+
+          if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            spinning = false;
+
+            if (spinBtn) {
+              spinBtn.disabled = false;
+              spinBtn.style.opacity = "1";
+            }
+
+            if (timerText) {
+              timerText.style.display = "none";
+            }
+
+            const reward = adminSettings.spinReward;
+            addEarnings(reward, 'spin');
+
+            alert(`🎉 YOU WIN!\n\nঅভিনন্দন! আপনি স্পিন করে ৳ ${reward.toFixed(2)} রিওয়ার্ড পেয়েছেন!`);
+          }
+        }, 1000);
+
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
