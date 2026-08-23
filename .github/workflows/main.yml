@@ -17,24 +17,26 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build Logic
+      - name: Setup and Build
         run: |
-          # সব পুরনো ফাইল মুছে ফেলা
+          # সব পুরনো জট পরিষ্কার করা
           rm -rf android package.json package-lock.json capacitor.config.json node_modules
           
-          # প্রজেক্ট সেটআপ
+          # প্রজেক্ট শুরু করা
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
           
-          # ফোল্ডার তৈরি
+          # www ফোল্ডার নিশ্চিত করা
           mkdir -p www
           if [ ! -f "www/index.html" ]; then echo "<h1>Test</h1>" > www/index.html; fi
           
-          # ক্যাপাসিটর কনফিগ তৈরি ও অ্যান্ড্রয়েড যোগ
+          # ক্যাপাসিটর সেটআপ
           npx cap init "MyConverter" com.jajahid.app --web-dir www
-          npx cap add android
           
-          # সিঙ্ক এবং বিল্ড
+          # অ্যান্ড্রয়েড যোগ করা (যদি আগে থেকে থাকে তবে এরর ইগনোর করবে)
+          npx cap add android || true
+          
+          # সিঙ্ক এবং এপিকে বিল্ড
           npx cap sync android
           cd android
           chmod +x gradlew
