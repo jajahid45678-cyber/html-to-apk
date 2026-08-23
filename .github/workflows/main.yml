@@ -9,41 +9,48 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4 # v3 থেকে v4 করা হয়েছে
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4 # v3 থেকে v4 করা হয়েছে
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: gradle
 
-      - name: Setup and Build
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Initialize Project
         run: |
-          # পুরনো সব ফাইল মুছে ফেলা যাতে কনফ্লিক্ট না হয়
-          rm -rf android package.json package-lock.json capacitor.config.json node_modules
+          # পুরোনো ফাইল পরিষ্কার করা
+          rm -rf android package.json package-lock.json capacitor.config.json
           
-          # প্রজেক্ট শুরু করা
+          # প্রজেক্ট সেটআপ
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
           
-          # www ফোল্ডার নিশ্চিত করা
+          # www ফোল্ডার এবং ফাইল নিশ্চিত করা
           mkdir -p www
-          if [ ! -f "www/index.html" ]; then echo "<h1>Test</h1>" > www/index.html; fi
+          if [ ! -f "www/index.html" ]; then echo "<h1>Build Success</h1>" > www/index.html; fi
           
-          # ক্যাপাসিটর সেটআপ
-          npx cap init "MyConverter" com.jajahid.app --web-dir www
+          # ক্যাপাসিটর কনফিগ তৈরি
+          npx cap init "My App" com.example.app --web-dir www
           
-          # অ্যান্ড্রয়েড যোগ করা
-          npx cap add android || true
-          
-          # সিঙ্ক এবং এপিকে বিল্ড
+          # অ্যান্ড্রয়েড যুক্ত করা এবং সিঙ্ক
+          npx cap add android
           npx cap sync android
+
+      - name: Build Android APK
+        run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4 # এটিই মূল সমস্যা ছিল, v3 বদলে v4 করা হয়েছে
+        uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
