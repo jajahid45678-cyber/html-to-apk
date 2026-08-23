@@ -9,17 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # v3 থেকে v4 করা হয়েছে
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4 # v3 থেকে v4 করা হয়েছে
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Setup and Build
         run: |
-          # সব পুরনো জট পরিষ্কার করা
+          # পুরনো সব ফাইল মুছে ফেলা যাতে কনফ্লিক্ট না হয়
           rm -rf android package.json package-lock.json capacitor.config.json node_modules
           
           # প্রজেক্ট শুরু করা
@@ -33,7 +33,7 @@ jobs:
           # ক্যাপাসিটর সেটআপ
           npx cap init "MyConverter" com.jajahid.app --web-dir www
           
-          # অ্যান্ড্রয়েড যোগ করা (যদি আগে থেকে থাকে তবে এরর ইগনোর করবে)
+          # অ্যান্ড্রয়েড যোগ করা
           npx cap add android || true
           
           # সিঙ্ক এবং এপিকে বিল্ড
@@ -43,7 +43,7 @@ jobs:
           ./gradlew assembleDebug
 
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # এটিই মূল সমস্যা ছিল, v3 বদলে v4 করা হয়েছে
         with:
           name: app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
