@@ -11,10 +11,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21 # এখানে ১৭ থেকে বাড়িয়ে ২১ করা হয়েছে
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
 
       - name: Install Node.js
@@ -24,14 +24,14 @@ jobs:
 
       - name: Build Project
         run: |
-          # পুরোনো জঞ্জাল পরিষ্কার করা
+          # পুরোনো ফাইল পরিষ্কার করা
           rm -rf android package.json package-lock.json capacitor.config.json node_modules
           
           # প্রজেক্ট ইনিশিয়ালাইজ করা
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
           
-          # www ফোল্ডার এবং index.html নিশ্চিত করা
+          # www ফোল্ডার নিশ্চিত করা
           mkdir -p www
           if [ ! -f "www/index.html" ]; then echo "<html><body><h1>Build Successful</h1></body></html>" > www/index.html; fi
           
@@ -42,12 +42,11 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      - name: Compile APK with Gradle
+      - name: Compile APK
         run: |
           cd android
           chmod +x gradlew
-          # গ্র্যাডল লাইসেন্স একসেপ্ট করা এবং বিল্ড করা
-          yes | ./gradlew assembleDebug
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
