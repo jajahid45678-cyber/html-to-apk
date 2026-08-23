@@ -24,32 +24,34 @@ jobs:
         with:
           node-version: 18
 
-      - name: Prepare Project
+      - name: Build From Scratch
         run: |
-          # যদি আগে থেকে কোনো ফাইল থাকে তা পরিষ্কার করা
-          rm -rf android package.json package-lock.json node_modules
-          mkdir -p www
-          # একটি ডিফল্ট index.html তৈরি করা (যদি না থাকে)
-          if [ ! -f "www/index.html" ]; then echo "<h1>Hello</h1>" > www/index.html; fi
+          # সব পুরোনো ফাইল মুছে নতুন করে শুরু করা
+          rm -rf android package.json package-lock.json node_modules capacitor.config.json
           
-          # প্রজেক্ট ইনিশিয়ালাইজ করা
+          # ফোল্ডার চেক করা
+          mkdir -p www
+          if [ ! -f "www/index.html" ]; then echo "<h1>Test</h1>" > www/index.html; fi
+          
+          # প্রজেক্ট ইনিশিয়ালাইজ
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
           
           # ক্যাপাসিটর সেটআপ
-          npx cap init "My Converter App" com.jajahid.app --web-dir www
+          npx cap init "MyConverter" com.jajahid.app --web-dir www
           npx cap add android
+          npx cap sync android
 
-      - name: Sync and Build APK
+      - name: Grant Execute Permission
+        run: chmod +x android/gradlew
+
+      - name: Compile APK
         run: |
-          npx cap sync
           cd android
-          # গ্র্যাডল ফাইলকে পারমিশন দেওয়া
-          chmod +x gradlew
           ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
-          name: app-debug
+          name: app-release-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
