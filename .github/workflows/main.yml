@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - master
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,25 +19,37 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Install Dependencies
+      - name: Prepare Project
         run: |
+          # যদি আগে থেকে কোনো ফাইল থাকে তা পরিষ্কার করা
+          rm -rf android package.json package-lock.json node_modules
+          mkdir -p www
+          # একটি ডিফল্ট index.html তৈরি করা (যদি না থাকে)
+          if [ ! -f "www/index.html" ]; then echo "<h1>Hello</h1>" > www/index.html; fi
+          
+          # প্রজেক্ট ইনিশিয়ালাইজ করা
+          npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init MyWebApp com.example.app --web-dir www || true
-          if [ ! -d "android" ]; then npx cap add android; fi
+          
+          # ক্যাপাসিটর সেটআপ
+          npx cap init "My Converter App" com.jajahid.app --web-dir www
+          npx cap add android
 
-      - name: Build APK
+      - name: Sync and Build APK
         run: |
           npx cap sync
           cd android
+          # গ্র্যাডল ফাইলকে পারমিশন দেওয়া
+          chmod +x gradlew
           ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
-          name: my-app-apk
+          name: app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
