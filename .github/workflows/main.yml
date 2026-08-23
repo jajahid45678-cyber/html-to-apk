@@ -17,20 +17,30 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build Process
+      - name: Build Logic
         run: |
-          mkdir -p www
-          if [ ! -f "www/index.html" ]; then echo "<h1>Test</h1>" > www/index.html; fi
+          # সব পুরনো ফাইল মুছে ফেলা
+          rm -rf android package.json package-lock.json capacitor.config.json node_modules
+          
+          # প্রজেক্ট সেটআপ
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "MyApp" com.example.app --web-dir www
+          
+          # ফোল্ডার তৈরি
+          mkdir -p www
+          if [ ! -f "www/index.html" ]; then echo "<h1>Test</h1>" > www/index.html; fi
+          
+          # ক্যাপাসিটর কনফিগ তৈরি ও অ্যান্ড্রয়েড যোগ
+          npx cap init "MyConverter" com.jajahid.app --web-dir www
           npx cap add android
+          
+          # সিঙ্ক এবং বিল্ড
           npx cap sync android
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload
+      - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
           name: app-debug
