@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard - Premium Earning Platform</title>
-
-  <!-- Firebase SDKs -->
+  <title>Premium Earning Platform</title>
+  
+  <!-- Firebase Compatibility SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
@@ -13,18 +13,18 @@
   <style>
     :root {
       --bg-color: #0b0f19;
-      --card-bg: rgba(23, 31, 50, 0.65);
+      --card-bg: rgba(23, 31, 50, 0.6);
       --card-border: rgba(255, 255, 255, 0.08);
       --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
       --accent-blue: #3b82f6;
       --accent-green: #10b981;
       --accent-red: #ef4444;
-      --accent-warning: #f59e0b;
+      --accent-gold: #f59e0b;
       --text-main: #f3f4f6;
       --text-muted: #9ca3af;
-      --radius-lg: 16px;
-      --radius-md: 10px;
-      --sidebar-width: 260px;
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --notice-speed: 18s; /* Default scroll speed */
     }
 
     * {
@@ -38,189 +38,73 @@
     body {
       background-color: var(--bg-color);
       color: var(--text-main);
-      overflow: hidden; /* layout-wrapper handles scrolling */
+      padding-bottom: 90px;
+      overflow-x: hidden;
     }
 
-    /* Layout & Sidebar Customization */
-    .layout-wrapper {
-      display: flex;
-      height: 100vh;
-    }
-
-    .sidebar {
-      width: var(--sidebar-width);
-      background: #111827;
-      border-right: 1px solid var(--card-border);
-      display: flex;
-      flex-direction: column;
-      padding: 20px 15px;
-      flex-shrink: 0;
-      transition: transform 0.3s ease;
-      z-index: 1050;
-      overflow-y: auto;
-    }
-
-    .sidebar-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 30px;
-      padding-left: 10px;
-    }
-
-    .sidebar-header h2 {
-      font-size: 1.25rem;
-      color: var(--accent-blue);
-    }
-
-    .main-content {
-      flex: 1;
-      height: 100vh;
-      overflow-y: auto;
-      padding: 20px;
-    }
-
-    .content-container {
-      max-width: 1000px;
+    .container {
+      padding: 16px;
+      max-width: 600px;
       margin: 0 auto;
-      padding-bottom: 60px;
     }
 
-    /* Sidebar Navigation Menu */
-    .admin-nav {
-      display: flex;
+    /* Maintenance & Auth Overlay Screen */
+    #maintenanceOverlay, #authOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg-color);
+      z-index: 9999;
+      display: none;
       flex-direction: column;
-      gap: 10px;
-    }
-
-    .nav-btn {
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--text-muted);
-      padding: 14px 16px;
-      border-radius: var(--radius-md);
-      font-size: 0.95rem;
-      text-align: left;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-    }
-
-    .nav-btn:hover {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-main);
-    }
-
-    .nav-btn.active {
-      background: var(--primary-gradient);
-      color: #fff;
-      border-color: transparent;
-      font-weight: 600;
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-    }
-
-    /* Mobile Buttons */
-    .hamburger-btn {
-      display: none;
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-main);
-      font-size: 1.2rem;
-      width: 42px;
-      height: 42px;
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      margin-right: 15px;
-    }
-
-    .close-sidebar-btn {
-      display: none;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-
-    /* Glassmorphism Cards */
-    .glass-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-lg);
-      padding: 18px;
-      margin-bottom: 16px;
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    }
-
-    /* Top Admin Bar */
-    .admin-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid var(--card-border);
-      position: relative;
-    }
-
-    /* 3-Dot Menu Dropdown */
-    .three-dots-btn {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-main);
-      font-size: 1.3rem;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s;
+      text-align: center;
+      padding: 20px;
+      overflow-y: auto;
     }
 
-    .three-dots-btn:active {
-      background: rgba(255, 255, 255, 0.15);
-    }
-
-    .dropdown-menu {
+    #authOverlay {
       display: none;
-      position: absolute;
-      right: 0;
-      top: 50px;
-      background: #131b2e;
-      border: 1px solid var(--card-border);
-      border-radius: var(--radius-md);
-      width: 200px;
-      z-index: 1000;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-      padding: 6px 0;
-      overflow: hidden;
+      background: rgba(11, 15, 25, 0.95);
+      backdrop-filter: blur(15px);
     }
 
-    .dropdown-item {
+    .auth-card {
       width: 100%;
-      padding: 10px 16px;
-      background: transparent;
-      border: none;
-      color: var(--text-main);
-      text-align: left;
-      font-size: 0.85rem;
-      cursor: pointer;
+      max-width: 400px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 25px 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .auth-tabs {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: background 0.2s;
+      background: rgba(0,0,0,0.3);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      margin-bottom: 20px;
     }
 
-    .dropdown-item:hover {
-      background: rgba(255, 255, 255, 0.08);
+    .auth-tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
     }
 
-    /* Tabs */
+    .auth-tab-btn.active {
+      background: var(--primary-gradient);
+      color: #fff;
+    }
+
+    /* Page Visibility */
     .tab-content {
       display: none;
       animation: fadeIn 0.3s ease;
@@ -230,84 +114,193 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
+      from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Dashboard Grid */
+    /* Glassmorphism Cards */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .balance-card {
+      background: var(--primary-gradient);
+      border: none;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(168, 85, 247, 0.3);
+    }
+
+    .balance-amount {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin: 8px 0;
+    }
+
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 15px;
     }
 
-    .stat-box {
+    .stat-item {
       background: rgba(0, 0, 0, 0.25);
-      padding: 15px;
+      padding: 10px;
       border-radius: var(--radius-md);
-      border: 1px solid var(--card-border);
+      text-align: center;
     }
 
-    .stat-title {
-      font-size: 0.75rem;
-      color: var(--text-muted);
+    /* SCROLLING NOTICE TICKER BOARD */
+    .notice-ticker {
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+      cursor: pointer;
     }
-
-    .stat-value {
-      font-size: 1.35rem;
-      font-weight: 700;
-      margin-top: 6px;
+    .ticker-icon {
+      font-size: 1.2rem;
+      animation: pulse 1.5s infinite;
+      flex-shrink: 0;
     }
-
-    /* Tables */
-    .table-responsive {
+    .ticker-wrap {
       width: 100%;
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-      text-align: left;
-    }
-
-    th, td {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--card-border);
+      overflow: hidden;
       white-space: nowrap;
     }
-
-    th {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-muted);
+    .ticker-content {
+      display: inline-block;
+      white-space: nowrap;
+      padding-left: 100%;
+      animation: tickerScroll var(--notice-speed) linear infinite;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+    @keyframes tickerScroll {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-100%, 0); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
     }
 
-    /* Buttons & Badges */
-    .badge {
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 0.7rem;
-      font-weight: 600;
+    /* MOVING BANNER SLIDER */
+    .banner-slider {
+      width: 100%;
+      overflow: hidden;
+      border-radius: var(--radius-lg);
+      margin-bottom: 16px;
+      position: relative;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     }
-    .badge-pending { background: rgba(245, 158, 11, 0.2); color: var(--accent-warning); }
-    .badge-approved { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
-    .badge-rejected { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
-
-    .btn-action {
-      padding: 6px 12px;
-      border-radius: 6px;
-      border: none;
-      font-size: 0.75rem;
+    .banner-track {
+      display: flex;
+      transition: transform 0.5s ease-in-out;
+      width: 100%;
+    }
+    .banner-slide {
+      min-width: 100%;
+      padding: 18px 16px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      gap: 14px;
       cursor: pointer;
-      font-weight: 600;
-      margin-right: 4px;
+    }
+    .banner-slide img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: var(--radius-md);
+    }
+    .banner-icon {
+      font-size: 2.2rem;
+      background: rgba(255,255,255,0.1);
+      padding: 10px;
+      border-radius: 14px;
+    }
+    .banner-info h4 {
+      font-size: 1rem;
+      color: #fff;
+    }
+    .banner-info p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .banner-indicators {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+    }
+    .banner-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .banner-dot.active {
+      background: #a855f7;
+      width: 18px;
+      border-radius: 10px;
     }
 
-    .btn-approve { background: var(--accent-green); color: #fff; }
-    .btn-reject { background: var(--accent-red); color: #fff; }
-    .btn-edit { background: var(--accent-blue); color: #fff; }
+    /* Earn Grid */
+    .earn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .earn-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .earn-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+
+    .limit-badge {
+      font-size: 0.68rem;
+      color: var(--accent-gold);
+      background: rgba(245, 158, 11, 0.15);
+      padding: 2px 6px;
+      border-radius: 6px;
+      margin-top: 4px;
+    }
 
     .btn-primary {
       width: 100%;
@@ -319,527 +312,539 @@
       font-weight: 600;
       cursor: pointer;
       margin-top: 10px;
+      transition: opacity 0.2s;
     }
 
-    .form-input, .form-textarea, .form-select {
+    .btn-primary:active { opacity: 0.8; }
+
+    /* Bottom Glass Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.75rem;
+      gap: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      color: #a855f7;
+      font-weight: 600;
+    }
+
+    /* Modal / Popup */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      overflow-y: auto;
+      padding: 15px;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    #welcomePopupModal .modal-box {
+      background: linear-gradient(145deg, rgba(23, 31, 50, 0.98), rgba(15, 23, 42, 0.98));
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      box-shadow: 0 10px 40px rgba(168, 85, 247, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 25px 20px;
+      position: relative;
+    }
+
+    /* Inputs & Selects */
+    .form-input {
       width: 100%;
       padding: 12px;
       background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--card-border);
       border-radius: var(--radius-md);
       color: var(--text-main);
-      margin: 8px 0 16px;
+      margin-top: 8px;
+      margin-bottom: 12px;
       outline: none;
     }
 
-    .form-select option {
-      background: #131b2e;
-      color: var(--text-main);
+    /* Spin Wheel Canvas */
+    #wheelCanvas {
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      border: 5px solid #a855f7;
+      transition: transform 3s cubic-bezier(0.15, 0.99, 0.18, 0.99);
     }
 
-    .form-textarea {
-      min-height: 80px;
-      resize: vertical;
-      font-family: monospace;
-      font-size: 0.85rem;
-    }
-
-    .section-divider {
-      border: none;
-      border-top: 1px dashed var(--card-border);
-      margin: 20px 0;
-    }
-
-    .section-title {
-      font-size: 0.95rem;
-      color: var(--accent-blue);
-      margin-bottom: 10px;
-      font-weight: 600;
-    }
-
-    /* Analytics Bars */
-    .bar-chart {
+    /* Scratch Card Custom Styles */
+    .scratch-header-banner {
+      background: linear-gradient(135deg, #3b0764 0%, #6b21a8 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 16px;
       display: flex;
-      align-items: flex-end;
+      align-items: center;
       gap: 12px;
-      height: 120px;
-      padding-top: 20px;
+      margin-bottom: 16px;
+      text-align: left;
     }
 
-    .bar {
-      flex: 1;
-      background: var(--primary-gradient);
-      border-radius: 4px 4px 0 0;
-      text-align: center;
+    .scratch-card-frame {
+      background: linear-gradient(145deg, #f59e0b, #b45309);
+      padding: 12px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
       position: relative;
+      margin-bottom: 16px;
     }
 
-    .bar span {
+    .scratch-inner-box {
+      background: #fef3c7;
+      border-radius: 12px;
+      height: 180px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #scratchCanvas {
       position: absolute;
-      top: -20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.7rem;
-      color: var(--text-muted);
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      touch-action: none;
     }
 
-    .user-pass-code {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-family: monospace;
+    .scratch-action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn-scratch-act {
+      border: none;
+      padding: 10px;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: bold;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .timer-badge-box {
       font-size: 0.85rem;
-    }
-
-    /* Mobile Responsive Sidebar */
-    @media (max-width: 768px) {
-      .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100%;
-        transform: translateX(-100%);
-        box-shadow: 4px 0 25px rgba(0,0,0,0.6);
-      }
-      .sidebar.open {
-        transform: translateX(0);
-      }
-      .hamburger-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .close-sidebar-btn {
-        display: block;
-      }
+      color: var(--accent-gold);
+      background: rgba(245, 158, 11, 0.15);
+      padding: 8px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-weight: bold;
+      display: none;
     }
   </style>
 </head>
 <body>
 
-  <div class="layout-wrapper">
-    
-    <!-- Sidebar Menu -->
-    <div class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <h2>⚙️ Admin Panel</h2>
-        <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
-      </div>
-      <div class="admin-nav">
-        <button class="nav-btn active" onclick="switchAdminTab('dashTab', this)">📊 Dashboard Overview</button>
-        <button class="nav-btn" onclick="switchAdminTab('usersTab', this)">👥 User Management</button>
-        <button class="nav-btn" onclick="switchAdminTab('withdrawTab', this)">💳 Withdrawals</button>
-        <button class="nav-btn" onclick="switchAdminTab('tasksTab', this)">📋 Task Manager</button>
-        <button class="nav-btn" onclick="switchAdminTab('settingsTab', this)">⚙️ App Settings</button>
-        <button class="nav-btn" onclick="switchAdminTab('analyticsTab', this)">📈 Analytics</button>
-      </div>
-    </div>
-
-    <!-- Main Dashboard Content -->
-    <div class="main-content">
-      <div class="content-container">
-        
-        <!-- Top Admin Bar with 3-Dot Options -->
-        <div class="admin-bar">
-          <div style="display: flex; align-items: center;">
-            <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
-            <div>
-              <h2 style="font-size: 1.3rem;">👨‍💼 Admin Control</h2>
-              <span style="font-size: 0.75rem; color: var(--accent-green);">● System Online</span>
-            </div>
-          </div>
-
-          <!-- 3-Dot Button -->
-          <div>
-            <button class="three-dots-btn" onclick="toggleThreeDotMenu(event)">⋮</button>
-            <div id="threeDotMenu" class="dropdown-menu">
-              <button class="dropdown-item" onclick="switchAdminTab('dashTab')">📊 Dashboard</button>
-              <button class="dropdown-item" onclick="switchAdminTab('usersTab')">👥 User Management</button>
-              <button class="dropdown-item" onclick="switchAdminTab('withdrawTab')">💳 Withdraw Requests</button>
-              <button class="dropdown-item" onclick="switchAdminTab('tasksTab')">📋 Task Manager</button>
-              <button class="dropdown-item" onclick="switchAdminTab('settingsTab')">⚙️ Reward & Ad Settings</button>
-              <button class="dropdown-item" onclick="switchAdminTab('analyticsTab')">📈 Analytics</button>
-              <hr style="border: none; border-top: 1px solid var(--card-border); margin: 4px 0;">
-              <button class="dropdown-item" onclick="sendAnnouncement()">📢 Global Notice</button>
-              <button class="dropdown-item" onclick="toggleMaintenance()">🛠 Maintenance Mode</button>
-              <hr style="border: none; border-top: 1px solid var(--card-border); margin: 4px 0;">
-              <button class="dropdown-item" style="color: var(--accent-red);" onclick="alert('Admin Logged Out')">🚪 Logout</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 1. DASHBOARD OVERVIEW -->
-        <div id="dashTab" class="tab-content active">
-          <div class="stats-grid">
-            <div class="stat-box">
-              <div class="stat-title">Total Users</div>
-              <div class="stat-value" id="totalUsers">0</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-title">Today's Active</div>
-              <div class="stat-value" id="activeUsers">0</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-title">Total Distributed</div>
-              <div class="stat-value" id="totalDistributed">৳ 0.00</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-title">Pending Withdrawals</div>
-              <div class="stat-value" id="pendingWithdrawAmount" style="color: var(--accent-warning);">৳ 0.00</div>
-            </div>
-          </div>
-
-          <div class="glass-card">
-            <h3>⚡ Quick System Control</h3>
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-              <button class="btn-primary" style="margin:0;" onclick="sendAnnouncement()">Send Global Notice</button>
-              <button class="btn-primary" style="margin:0; background: rgba(239, 68, 68, 0.3); border: 1px solid var(--accent-red);" onclick="toggleMaintenance()">Toggle Maintenance</button>
-            </div>
-          </div>
-
-          <div class="glass-card">
-            <h3>🕒 Recent Withdrawal Requests</h3>
-            <div class="table-responsive" style="margin-top: 10px;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>User ID</th>
-                    <th>Method</th>
-                    <th>Amount</th>
-                    <th>Date & Time</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="dashRecentWithdraws">
-                  <tr>
-                    <td colspan="5" style="text-align: center; color: var(--text-muted);">কোনো ডেটা পাওয়া যায়নি</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- 2. USER MANAGEMENT -->
-        <div id="usersTab" class="tab-content">
-          <div class="glass-card">
-            <h3>User Management</h3>
-            <input type="text" class="form-input" id="searchUser" placeholder="Search by User ID, Name, Phone or Email..." onkeyup="filterUsers()">
-
-            <div class="table-responsive">
-              <table id="userTable">
-                <thead>
-                  <tr>
-                    <th>User ID</th>
-                    <th>Name</th>
-                    <th>Phone</th>
-                    <th>Email</th>
-                    <th>Password</th>
-                    <th>Balance</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="userTableBody">
-                  <tr>
-                    <td colspan="8" style="text-align: center; color: var(--text-muted);">ইউজার লোড হচ্ছে...</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. WITHDRAWAL MANAGEMENT -->
-        <div id="withdrawTab" class="tab-content">
-          <div class="glass-card">
-            <h3>Withdrawal Requests</h3>
-            <div class="table-responsive" style="margin-top: 10px;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>User ID</th>
-                    <th>Method</th>
-                    <th>Account</th>
-                    <th>Amount</th>
-                    <th>Date & Time (তারিখ ও সময়)</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody id="withdrawRequestsTable">
-                  <tr>
-                    <td colspan="6" style="text-align: center; color: var(--text-muted);">কোনো পেন্ডিং উইথড্র নেই</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. TASK MANAGEMENT -->
-        <div id="tasksTab" class="tab-content">
-          <div class="glass-card">
-            <h3>Create New Task</h3>
-            
-            <label style="font-size: 0.85rem;">Task Title (টাস্ক শিরোনাম)</label>
-            <input type="text" class="form-input" id="newTaskTitle" placeholder="e.g. Visit Website / Subscribe Channel">
-
-            <label style="font-size: 0.85rem;">Task Type / Category (টাস্কের ধরণ)</label>
-            <select class="form-select" id="newTaskType">
-              <option value="Website Visit">Website Visit (ওয়েবসাইট ভিজিট)</option>
-              <option value="Ad Click">Ad Click & Visit (এডস ক্লিক ও ভিজিট)</option>
-              <option value="YouTube / Video">YouTube / Video Watch</option>
-              <option value="App Install / Custom">App Install / Custom Task</option>
-            </select>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-              <div>
-                <label style="font-size: 0.85rem;">Reward Amount (BDT)</label>
-                <input type="number" step="0.01" class="form-input" id="newTaskReward" placeholder="5.00">
-              </div>
-              <div>
-                <label style="font-size: 0.85rem;">Task Timer (টাইমার - সেকেন্ড)</label>
-                <input type="number" class="form-input" id="newTaskTimer" placeholder="15" value="15">
-              </div>
-            </div>
-
-            <!-- TASK BREAK/COOLDOWN TIME -->
-            <label style="font-size: 0.85rem;">Task Break/Cooldown Time (পরবর্তী টাস্ক পাওয়ার বিরতি - মিনিট)</label>
-            <input type="number" class="form-input" id="newTaskCooldown" placeholder="0 (0 দিলে সাথে সাথে পরবর্তী কাজ করা যাবে)" value="0">
-
-            <label style="font-size: 0.85rem;">Website Link (কাজ/ওয়েবসাইট লিংক)</label>
-            <input type="url" class="form-input" id="newTaskLink" placeholder="https://example.com/task-page">
-
-            <label style="font-size: 0.85rem;">Ad Link or Script Code (ঐচ্ছিক এডস কোড/লিংক)</label>
-            <textarea class="form-textarea" id="newTaskAdCode" placeholder="Monetag Direct Link অথবা Ad Script (যদি এডস দেখাতে চান)"></textarea>
-
-            <button class="btn-primary" onclick="addNewTask()">Publish Task</button>
-          </div>
-
-          <div class="glass-card">
-            <h3>Active Tasks</h3>
-            <div id="taskList" style="margin-top: 15px;">
-              <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">টাস্ক লোড হচ্ছে...</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 5. EARNING, LIMITS, TIMERS, NOTICES, BANNERS & AD NETWORK SETTINGS -->
-        <div id="settingsTab" class="tab-content">
-          <div class="glass-card">
-            <h3>⚙️ System & Reward Settings</h3>
-
-            <!-- 5.0 USER APP NOTICES & BANNERS -->
-            <div class="section-title" style="margin-top: 15px;">📢 Notice, Banner & Popup Settings (নোটিশ, ব্যানার ও পপআপ)</div>
-            
-            <label style="font-size: 0.85rem;">Scrolling Notice Text (ইউজার অ্যাপ স্ক্রলিং নোটিশ)</label>
-            <input type="text" class="form-input" id="settingScrollNotice" placeholder="স্বাগতম! আমাদের অ্যাপে কাজ করে প্রতিদিন ইনকাম করুন।">
-
-            <label style="font-size: 0.85rem;">Scroll Notice Speed (স্ক্রলিং নোটিশ স্পিড/গতি)</label>
-            <select class="form-select" id="settingScrollSpeed">
-              <option value="5">Ultra Fast (৫ সেকেন্ড)</option>
-              <option value="8" selected>Very Fast (৮ সেকেন্ড)</option>
-              <option value="12">Fast (১২ সেকেন্ড)</option>
-              <option value="20">Medium / Standard (২০ সেকেন্ড)</option>
-              <option value="35">Slow (৩৫ সেকেন্ড)</option>
-            </select>
-
-            <label style="font-size: 0.85rem;">Sliding Banner Image 1 URL (ব্যানার ছবি ১ লিংক)</label>
-            <input type="url" class="form-input" id="settingBanner1" placeholder="https://via.placeholder.com/600x200">
-
-            <label style="font-size: 0.85rem;">Sliding Banner Image 2 URL (ব্যানার ছবি ২ লিংক)</label>
-            <input type="url" class="form-input" id="settingBanner2" placeholder="https://via.placeholder.com/600x200">
-
-            <label style="font-size: 0.85rem;">Sliding Banner Image 3 URL (ব্যানার ছবি ৩ লিংক)</label>
-            <input type="url" class="form-input" id="settingBanner3" placeholder="https://via.placeholder.com/600x200">
-
-            <label style="font-size: 0.85rem;">Popup Notice Text (পপআপ নোটিশ টেক্সট)</label>
-            <textarea class="form-textarea" id="settingPopupNotice" placeholder="অ্যাপে যুক্ত হওয়ার জন্য ধন্যবাদ। প্রতিদিনের পেমেন্ট ২৪ ঘণ্টার মধ্যে দেওয়া হয়।"></textarea>
-
-            <label style="font-size: 0.85rem;">Popup Notice Status (পপআপ নোটিশ অন/অফ)</label>
-            <select class="form-select" id="settingPopupActive">
-              <option value="true">Active (চালু)</option>
-              <option value="false">Disabled (বন্ধ)</option>
-            </select>
-
-            <hr class="section-divider">
-            
-            <!-- 5.1 REWARDS -->
-            <div class="section-title">💰 Reward Amounts (BDT)</div>
-            <label style="font-size: 0.85rem;">Watch Ads Reward (BDT)</label>
-            <input type="number" step="0.01" class="form-input" id="settingAdReward" value="2.50">
-
-            <label style="font-size: 0.85rem;">Spin & Win Reward (BDT)</label>
-            <input type="number" step="0.01" class="form-input" id="settingSpinReward" value="5.00">
-
-            <label style="font-size: 0.85rem;">Scratch Card Reward (BDT)</label>
-            <input type="number" step="0.01" class="form-input" id="settingScratchReward" value="2.00">
-
-            <label style="font-size: 0.85rem;">Daily Bonus (BDT)</label>
-            <input type="number" step="0.01" class="form-input" id="settingDailyBonus" value="5.00">
-
-            <label style="font-size: 0.85rem;">Minimum Withdrawal (BDT)</label>
-            <input type="number" step="0.01" class="form-input" id="settingMinWithdraw" value="50.00">
-
-            <hr class="section-divider">
-
-            <!-- 5.2 DAILY TASK LIMITS & TIMERS -->
-            <div class="section-title">🔢 Daily Work Limits & Timers (দৈনিক কাজ ও টাইমার)</div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-              <div>
-                <label style="font-size: 0.85rem;">Daily Custom Task Limit (দৈনিক কাস্টম টাস্ক লিমিট)</label>
-                <input type="number" class="form-input" id="settingTaskLimit" value="10" placeholder="10">
-              </div>
-              <div>
-                <label style="font-size: 0.85rem;">Task Cooldown / Break Time (বিরতি - মিনিট)</label>
-                <input type="number" class="form-input" id="settingTaskCooldownTimer" value="5" placeholder="5">
-              </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-              <div>
-                <label style="font-size: 0.85rem;">Daily Watch Ads Limit</label>
-                <input type="number" class="form-input" id="settingAdLimit" value="10" placeholder="10">
-              </div>
-              <div>
-                <label style="font-size: 0.85rem;">Watch Ads Timer (সেকেন্ড)</label>
-                <input type="number" class="form-input" id="settingAdTimerWatch" value="5" placeholder="5">
-              </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-              <div>
-                <label style="font-size: 0.85rem;">Daily Spin Limit</label>
-                <input type="number" class="form-input" id="settingSpinLimit" value="5" placeholder="5">
-              </div>
-              <div>
-                <label style="font-size: 0.85rem;">Spin Timer (সেকেন্ড)</label>
-                <input type="number" class="form-input" id="settingAdTimerSpin" value="5" placeholder="5">
-              </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-              <div>
-                <label style="font-size: 0.85rem;">Daily Scratch Limit</label>
-                <input type="number" class="form-input" id="settingScratchLimit" value="3" placeholder="3">
-              </div>
-              <div>
-                <label style="font-size: 0.85rem;">Scratch Timer (সেকেন্ড)</label>
-                <input type="number" class="form-input" id="settingAdTimerScratch" value="5" placeholder="5">
-              </div>
-            </div>
-
-            <hr class="section-divider">
-
-            <!-- 5.3 AD NETWORK CODES -->
-            <div class="section-title">📢 Ad Network Script / Link Settings (Monetag, AdMob, etc.)</div>
-            
-            <label style="font-size: 0.85rem;">Watch Ads Code / Direct Link (ওয়াচ এডসের কোড বা Monetag Direct Link)</label>
-            <textarea class="form-textarea" id="settingAdScriptWatch" placeholder="Monetag Direct Link (e.g. https://...) অথবা <script ...></script>"></textarea>
-
-            <label style="font-size: 0.85rem;">Spin Wheel Ad Code / Link (স্পিনের জন্য এড কোড বা Direct Link)</label>
-            <textarea class="form-textarea" id="settingAdScriptSpin" placeholder="Monetag Direct Link (e.g. https://...) অথবা Ad Script"></textarea>
-
-            <label style="font-size: 0.85rem;">Scratch Card Ad Code / Link (স্ক্র্যাচ কার্ডের জন্য এড কোড বা Direct Link)</label>
-            <textarea class="form-textarea" id="settingAdScriptScratch" placeholder="Monetag Direct Link (e.g. https://...) অথবা Ad Script"></textarea>
-
-            <label style="font-size: 0.85rem;">Global Banner / Onclick Ad Script (গ্লোবাল ব্যানার এড কোড)</label>
-            <textarea class="form-textarea" id="settingAdScriptGlobal" placeholder="<script ...></script>"></textarea>
-
-            <button class="btn-primary" onclick="saveSettings()">Save All Settings</button>
-          </div>
-        </div>
-
-        <!-- 6. ANALYTICS -->
-        <div id="analyticsTab" class="tab-content">
-          <div class="glass-card">
-            <h3>Weekly Earnings & Payout Analytics</h3>
-            <p style="font-size: 0.75rem; color: var(--text-muted);">Payout distribution over last 5 days</p>
-            
-            <div class="bar-chart">
-              <div class="bar" style="height: 40%;"><span>৳2k</span></div>
-              <div class="bar" style="height: 70%;"><span>৳4k</span></div>
-              <div class="bar" style="height: 50%;"><span>৳3k</span></div>
-              <div class="bar" style="height: 90%;"><span>৳6k</span></div>
-              <div class="bar" style="height: 65%;"><span>৳4.5k</span></div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- User Work History Modal -->
-  <div id="userHistoryModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:2000; align-items:center; justify-content:center; padding:15px;">
-    <div class="glass-card" style="width:100%; max-width:700px; max-height:85vh; overflow-y:auto;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <h3 id="historyModalTitle">📋 ইউজার কাজের বিস্তারিত</h3>
-        <button style="background:transparent; border:none; color:var(--text-main); font-size:1.5rem; cursor:pointer;" onclick="closeHistoryModal()">✕</button>
-      </div>
+  <!-- Authentication Screen Overlay (Login / Register) -->
+  <div id="authOverlay">
+    <div class="auth-card">
+      <div style="font-size: 2.5rem; margin-bottom: 8px;">💎</div>
+      <h2 style="margin-bottom: 15px; font-size: 1.4rem;">Premium Earning</h2>
       
-      <!-- User Summary Badge Row -->
-      <div id="userWorkSummary" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:10px; margin-bottom:15px;">
+      <!-- Auth Switcher Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tabLoginBtn" onclick="switchAuthMode('login')">লগইন</button>
+        <button class="auth-tab-btn" id="tabRegisterBtn" onclick="switchAuthMode('register')">রেজিস্ট্রেশন</button>
       </div>
 
-      <!-- Filter Controls for Tasks -->
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <span style="font-size:0.85rem; color:var(--text-muted);">ফিল্টার অপশন:</span>
-        <select class="form-select" id="historyTypeFilter" onchange="filterUserHistory()" style="width:auto; margin:0; padding:6px 10px; font-size:0.85rem;">
-          <option value="ALL">সকল কাজ (All Activity)</option>
-          <option value="AD">Watch Ads</option>
-          <option value="SPIN">Spin Wheel</option>
-          <option value="SCRATCH">Scratch Card</option>
-          <option value="TASK">Custom Tasks / Clicks</option>
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLogin(event)" style="text-align: left;">
+        <label style="font-size: 0.8rem; color: var(--text-muted);">ইমেইল অ্যাড্রেস</label>
+        <input type="email" id="loginEmail" class="form-input" placeholder="example@mail.com" required>
+
+        <label style="font-size: 0.8rem; color: var(--text-muted);">পাসওয়ার্ড</label>
+        <input type="password" id="loginPassword" class="form-input" placeholder="******" required>
+
+        <button type="submit" class="btn-primary" id="loginSubmitBtn">প্রবেশ করুন</button>
+      </form>
+
+      <!-- Registration Form -->
+      <form id="registerForm" onsubmit="handleRegister(event)" style="text-align: left; display: none;">
+        <label style="font-size: 0.8rem; color: var(--text-muted);">আপনার নাম</label>
+        <input type="text" id="regName" class="form-input" placeholder="আপনার নাম লিখুন" required>
+
+        <label style="font-size: 0.8rem; color: var(--text-muted);">ইমেইল অ্যাড্রেস</label>
+        <input type="email" id="regEmail" class="form-input" placeholder="example@mail.com" required>
+
+        <label style="font-size: 0.8rem; color: var(--text-muted);">পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)</label>
+        <input type="password" id="regPassword" class="form-input" placeholder="******" minlength="6" required>
+
+        <label style="font-size: 0.8rem; color: var(--text-muted);">রেফারেল কোড (ঐচ্ছিক)</label>
+        <input type="text" id="regRefCode" class="form-input" placeholder="কোড থাকলে দিন">
+
+        <button type="submit" class="btn-primary" id="regSubmitBtn">রেজিস্ট্রেশন করুন</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Maintenance Mode Screen -->
+  <div id="maintenanceOverlay">
+    <div style="font-size: 3rem; margin-bottom: 10px;">🛠</div>
+    <h2>সিস্টেম মেইনটেন্যান্স চলছে</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;">আমাদের সার্ভার উন্নয়নের কাজ চলছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।</p>
+  </div>
+
+  <!-- Global Ad Container (Admin Global Script Container) -->
+  <div id="globalAdContainer"></div>
+
+  <div class="container">
+
+    <!-- Header Section -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 45px; height: 45px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; font-weight: bold;" id="user-avatar-char">U</div>
+        <div>
+          <h4 id="user-name">স্বাগতম, ইউজার!</h4>
+          <span style="font-size: 0.75rem; color: var(--text-muted);" id="user-id">ID: #---</span>
+        </div>
+      </div>
+      <!-- Bell Icon Button: Triggers Notice Popup Modal -->
+      <button style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 10px; border-radius: 50%; cursor: pointer; color: #fff;" onclick="showBellNotice()">
+        🔔
+      </button>
+    </div>
+
+    <!-- 1. HOME TAB -->
+    <div id="homeTab" class="tab-content active">
+
+      <!-- SCROLLING NOTICE BOARD TICKER -->
+      <div class="notice-ticker" onclick="showBellNotice()">
+        <div class="ticker-icon">📢</div>
+        <div class="ticker-wrap">
+          <div class="ticker-content" id="scrollingNoticeText">
+            স্বাগতম! আমাদের প্রিমিয়াম আর্নিং প্ল্যাটফর্মে প্রতিদিন কাজ করে এবং রেফার করে বেশি বেশি টাকা আয় করুন।
+          </div>
+        </div>
+      </div>
+
+      <!-- BALANCE CARD -->
+      <div class="glass-card balance-card">
+        <span style="font-size: 0.85rem; opacity: 0.9;">Available Balance</span>
+        <div class="balance-amount">৳ <span id="main-balance">0.00</span></div>
+        
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div style="font-size: 0.75rem; opacity: 0.8;">Today's Earned</div>
+            <strong id="today-earned">৳ 0.00</strong>
+          </div>
+          <div class="stat-item">
+            <div style="font-size: 0.75rem; opacity: 0.8;">Referral Earned</div>
+            <strong id="ref-earned">৳ 0.00</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOVING BANNER SLIDER -->
+      <div class="banner-slider">
+        <div class="banner-track" id="bannerTrack">
+          <!-- Default Dynamic Slides -->
+          <div class="banner-slide">
+            <div class="banner-icon">🚀</div>
+            <div class="banner-info">
+              <h4>প্রতিদিন আনলিমিটেড আয়!</h4>
+              <p>ভিডিও অ্যাড দেখে ও স্পিন করে ইনকাম করুন প্রতিদিন।</p>
+            </div>
+          </div>
+          <div class="banner-slide">
+            <div class="banner-icon">🎁</div>
+            <div class="banner-info">
+              <h4>১০ টাকা রেফার বোনাস!</h4>
+              <p>বন্ধুদের ইনভাইট করুন এবং প্রতি রেফারে ১০ টাকা পান।</p>
+            </div>
+          </div>
+          <div class="banner-slide">
+            <div class="banner-icon">⚡</div>
+            <div class="banner-info">
+              <h4>ইনস্ট্যান্ট উইথড্র সুবিধা!</h4>
+              <p>বিকাশ, নগদ ও রকেটের মাধ্যমে দ্রুত টাকা তুলুন।</p>
+            </div>
+          </div>
+        </div>
+        <!-- Indicators -->
+        <div class="banner-indicators" id="bannerIndicators">
+          <span class="banner-dot active" onclick="goToSlide(0)"></span>
+          <span class="banner-dot" onclick="goToSlide(1)"></span>
+          <span class="banner-dot" onclick="goToSlide(2)"></span>
+        </div>
+      </div>
+
+      <h3 style="margin-bottom: 12px; font-size: 1.1rem;">Quick Earn</h3>
+      <div class="earn-grid">
+        <div class="glass-card earn-card">
+          <div class="earn-icon">🎬</div>
+          <h4>Watch Ads</h4>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">রিওয়ার্ড: ৳ <span id="displayAdReward">2.50</span></p>
+          <div class="limit-badge">সীমা: <span id="displayAdLimit">০/১০</span></div>
+          <button class="btn-primary" onclick="watchAd(this)">Earn Now</button>
+        </div>
+
+        <div class="glass-card earn-card">
+          <div class="earn-icon">🎁</div>
+          <h4>Daily Bonus</h4>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">রিওয়ার্ড: ৳ <span id="displayDailyBonus">5.00</span></p>
+          <div class="limit-badge">দৈনিক ১ বার</div>
+          <button class="btn-primary" onclick="claimDailyBonus()">Claim</button>
+        </div>
+
+        <div class="glass-card earn-card">
+          <div class="earn-icon">🎡</div>
+          <h4>Spin & Win</h4>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">রিওয়ার্ড: ৳ <span id="displaySpinReward">5.00</span></p>
+          <div class="limit-badge">সীমা: <span id="displaySpinLimit">০/৫</span></div>
+          <button class="btn-primary" onclick="toggleModal('spinModal', true)">Play Now</button>
+        </div>
+
+        <div class="glass-card earn-card">
+          <div class="earn-icon">🎫</div>
+          <h4>Scratch Card</h4>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">রিওয়ার্ড: ৳ <span id="displayScratchReward">2.00</span></p>
+          <div class="limit-badge">সীমা: <span id="displayScratchLimit">০/৩</span></div>
+          <button class="btn-primary" onclick="openScratchCard()">Scratch</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. TASKS TAB -->
+    <div id="tasksTab" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3>Task Center</h3>
+        <span id="taskProgressBadge" style="background: rgba(168, 85, 247, 0.2); border: 1px solid var(--card-border); color: #a855f7; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.85rem;">
+          ০/০
+        </span>
+      </div>
+      <div id="userTaskList">
+        <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">টাস্ক লোড হচ্ছে...</p>
+      </div>
+    </div>
+
+    <!-- 3. REFERRAL TAB -->
+    <div id="referralTab" class="tab-content">
+      <div class="glass-card" style="text-align: center;">
+        <h3>Invite Friends & Earn</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0;">প্রতিটি সফল রেফারেলের জন্য পান ৳ ১০.০০ বোনাস!</p>
+        
+        <label style="font-size: 0.75rem; color: var(--text-muted);">Your Referral Code</label>
+        <input type="text" class="form-input" id="refCode" value="..." readonly style="text-align: center; font-weight: bold;">
+        
+        <button class="btn-primary" onclick="copyReferral()">Copy Referral Code</button>
+        <button class="btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); margin-top: 8px;" onclick="shareReferral()">🚀 Share Referral Link</button>
+      </div>
+    </div>
+
+    <!-- 4. WALLET TAB -->
+    <div id="walletTab" class="tab-content">
+      <div class="glass-card">
+        <h3>Withdraw Earnings</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">সর্বনিম্ন উত্তোলন: ৳ <span id="displayMinWithdraw">50.00</span></p>
+
+        <label style="font-size: 0.8rem;">Payment Method</label>
+        <select class="form-input" id="withdrawMethod">
+          <option value="bKash">bKash</option>
+          <option value="Nagad">Nagad</option>
+          <option value="Rocket">Rocket</option>
         </select>
+
+        <label style="font-size: 0.8rem;">Account Number</label>
+        <input type="number" class="form-input" id="withdrawAcc" placeholder="017xxxxxxxx">
+
+        <label style="font-size: 0.8rem;">Amount (BDT)</label>
+        <input type="number" class="form-input" id="withdrawAmount" placeholder="50.00">
+
+        <button class="btn-primary" onclick="requestWithdrawal()">Submit Request</button>
       </div>
 
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>কাজের নাম / টাইপ</th>
-              <th>আয়/রিওয়ার্ড</th>
-              <th>সম্পূর্ণের তারিখ ও সময়</th>
-            </tr>
-          </thead>
-          <tbody id="userHistoryTableBody">
-            <tr><td colspan="3" style="text-align:center; color:var(--text-muted);">ডেটা লোড হচ্ছে...</td></tr>
-          </tbody>
-        </table>
+      <h4 style="margin-bottom: 10px;">Recent Transactions</h4>
+      <div class="glass-card" style="padding: 12px;" id="transHistory">
+        <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">এখনো কোনো ট্রানজেকশন হয়নি</p>
       </div>
+    </div>
+
+    <!-- 5. PROFILE TAB -->
+    <div id="profileTab" class="tab-content">
+      <div class="glass-card" style="text-align: center;">
+        <div style="width: 70px; height: 70px; border-radius: 50%; background: var(--primary-gradient); margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold;" id="profile-avatar-char">U</div>
+        <h3 id="profile-name">User Profile</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted);" id="profile-email">email@domain.com</p>
+      </div>
+
+      <div class="glass-card">
+        <button class="btn-primary" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4);" onclick="handleLogout()">Logout</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- NOTICE POPUP MODAL -->
+  <div id="welcomePopupModal" class="modal-overlay">
+    <div class="glass-card modal-box">
+      <div style="font-size: 2.8rem; margin-bottom: 8px;">🔔</div>
+      <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-size: 1.25rem;">জরুরি নোটিশ</h3>
+      <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: 12px; font-size: 0.88rem; line-height: 1.5; color: #e2e8f0; text-align: left; margin: 12px 0;" id="welcomeNoticeText">
+        স্বাগতম আমাদের প্ল্যাটফর্মে! প্রতিদিন সঠিক নিয়মে টাস্ক সম্পন্ন করুন এবং কোনো প্রকার ভিপিএন অপব্যবহার এড়িয়ে চলুন। যেকোনো সহায়তায় সাপোর্ট সেকশনে যোগাযোগ করুন।
+      </div>
+      <button class="btn-primary" onclick="toggleModal('welcomePopupModal', false)">ঠিক আছে, ধন্যবাদ</button>
     </div>
   </div>
 
-  <!-- Edit User Info Modal -->
-  <div id="editUserModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:2000; align-items:center; justify-content:center; padding:15px;">
-    <div class="glass-card" style="width:100%; max-width:500px; max-height:90vh; overflow-y:auto;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <h3>✏️ ইউজারের তথ্য পরিবর্তন করুন</h3>
-        <button style="background:transparent; border:none; color:var(--text-main); font-size:1.5rem; cursor:pointer;" onclick="closeEditUserModal()">✕</button>
+  <!-- Scratch Card UI Modal -->
+  <div id="scratchModal" class="modal-overlay">
+    <div class="glass-card modal-box" style="padding: 16px;">
+      
+      <!-- Top Navigation Row -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="font-size: 1.1rem; display: flex; align-items: center; gap: 6px;">
+          <span style="cursor: pointer;" onclick="toggleModal('scratchModal', false)">❮</span> Scratch Card
+        </h3>
+        <div style="display: flex; gap: 8px;">
+          <span style="background: rgba(245, 158, 11, 0.2); border: 1px solid var(--accent-gold); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; color: var(--accent-gold); font-weight: bold;">
+            🪙 <span id="scratchCoinDisplay">0.00</span>
+          </span>
+        </div>
       </div>
 
-      <input type="hidden" id="editUserId">
+      <!-- Banner -->
+      <div class="scratch-header-banner">
+        <div style="font-size: 2.2rem;">🎁</div>
+        <div>
+          <h4 style="color: #fef08a; font-size: 1rem;">Scratch & Win</h4>
+          <p style="font-size: 0.75rem; color: #e9d5ff; margin-top: 2px;">Scratch the card and win exciting rewards!</p>
+        </div>
+      </div>
 
-      <label style="font-size: 0.85rem;">ইউজার নাম (Name)</label>
-      <input type="text" class="form-input" id="editUserName" placeholder="নাম লিখুন">
+      <!-- Live Scratch Ad Timer Notice -->
+      <div id="scratchTimerText" class="timer-badge-box"></div>
 
-      <label style="font-size: 0.85rem;">ফোন নম্বর (Phone/Number)</label>
-      <input type="text" class="form-input" id="editUserPhone" placeholder="017xxxxxxxx">
+      <!-- Scratch Frame -->
+      <div class="scratch-card-frame">
+        <div class="scratch-inner-box">
+          <div style="font-size: 2.5rem; margin-bottom: 4px;">🪙</div>
+          <h2 style="color: #78350f; font-weight: 900; font-size: 1.8rem;" id="scratchAmountText">৳ 2.00</h2>
+          <span style="color: #92400e; font-size: 0.8rem; font-weight: bold;">Coins Reward</span>
+          <canvas id="scratchCanvas"></canvas>
+        </div>
+      </div>
 
-      <label style="font-size: 0.85rem;">ইমেইল (Email)</label>
-      <input type="email" class="form-input" id="editUserEmail" placeholder="user@gmail.com">
+      <!-- Card Counter -->
+      <div style="display: flex; justify-content: space-between; align-items: center; text-align: left; margin-bottom: 6px;">
+        <div>
+          <h5 style="font-size: 0.85rem;">Your Scratch Cards</h5>
+          <p style="font-size: 0.7rem; color: var(--text-muted);">Today Limit: <span id="scratchModalLimit">0/3</span></p>
+        </div>
+        <span style="font-weight: bold; color: var(--accent-gold); font-size: 1.1rem;" id="scratchCardCount">🎟 <span id="cardCountVal">3</span></span>
+      </div>
 
-      <label style="font-size: 0.85rem;">পাসওয়ার্ড (Password)</label>
-      <input type="text" class="form-input" id="editUserPassword" placeholder="পাসওয়ার্ড">
+      <!-- Action Buttons -->
+      <div class="scratch-action-grid">
+        <button id="btnScratchWatchAd" class="btn-scratch-act" style="background: linear-gradient(135deg, #7c3aed, #a855f7);" onclick="watchAdForCard(this)">
+          🎬 Watch Ad <br><span style="font-size:0.65rem; opacity:0.8;">+1 Card</span>
+        </button>
+        <button class="btn-scratch-act" style="background: linear-gradient(135deg, #059669, #10b981);" onclick="goToTasksFromScratch()">
+          📋 Complete Task <br><span style="font-size:0.65rem; opacity:0.8;">+1 Card</span>
+        </button>
+      </div>
 
-      <label style="font-size: 0.85rem;">ব্যালেন্স (Balance - BDT)</label>
-      <input type="number" step="0.01" class="form-input" id="editUserBalance" placeholder="0.00">
+      <!-- Recent Wins -->
+      <div style="text-align: left; margin-top: 16px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px;">
+        <h5 style="font-size: 0.8rem; color: var(--accent-gold); margin-bottom: 8px;">🎁 Recent Wins</h5>
+        <div id="recentWinsContainer">
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 6px;">
+            <span>🪙 <span class="active-user-display-name">ইউজার</span></span>
+            <span style="color: var(--accent-gold);" id="activeUserWinDisplay">এখনো স্ক্র্যাচ করা হয়নি</span>
+          </div>
+        </div>
+      </div>
 
-      <button class="btn-primary" onclick="saveUserEdit()">Save Changes</button>
+      <button class="btn-primary" style="background: transparent; border: 1px solid var(--card-border); margin-top: 12px;" onclick="toggleModal('scratchModal', false)">Close</button>
     </div>
   </div>
+
+  <!-- Spin Wheel Modal -->
+  <div id="spinModal" class="modal-overlay">
+    <div class="glass-card modal-box">
+      <h3>Spin & Win</h3>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">দৈনিক স্পিন লিমিট: <span id="spinModalLimit">০/৫</span></p>
+      
+      <div style="margin: 20px 0; display: flex; justify-content: center;">
+        <canvas id="wheelCanvas" width="250" height="250"></canvas>
+      </div>
+
+      <!-- Live Spin Ad Timer Notice -->
+      <div id="spinTimerText" class="timer-badge-box"></div>
+
+      <button id="spinBtn" class="btn-primary" onclick="startSpin()">SPIN NOW</button>
+      <button class="btn-primary" style="background: transparent; border: 1px solid var(--card-border);" onclick="toggleModal('spinModal', false)">Close</button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('homeTab', this)">
+      <span>🏠</span><span>Home</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('tasksTab', this)">
+      <span>📋</span><span>Tasks</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('referralTab', this)">
+      <span>👥</span><span>Refer</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('walletTab', this)">
+      <span>💳</span><span>Wallet</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('profileTab', this)">
+      <span>👤</span><span>Profile</span>
+    </button>
+  </nav>
 
   <!-- JavaScript Engine -->
   <script>
@@ -854,668 +859,1541 @@
       appId: "1:615243158311:android:02adf3af48c96197184f02"
     };
 
-    // Initialize Firebase
+    // Initialize Firebase Services
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const database = firebase.database();
+    const auth = firebase.auth();
 
-    let currentRawHistory = [];
+    // Enable Auth Persistence so tab switching never logs out user
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-    // Mobile Sidebar Toggle
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('open');
+    // User State Variables
+    let currentUserId = null;
+    let userRef = null;
+
+    // Get Today's Date String for Daily Limits Reset
+    const getTodayDateStr = () => new Date().toISOString().split('T')[0];
+
+    // State Management
+    let userState = {
+      name: "ইউজার",
+      email: "",
+      balance: 0.00,
+      todayEarned: 0.00,
+      refEarned: 0.00,
+      refCode: "",
+      dailyClaimed: false,
+      scratchCards: 3,
+      todayAdCount: 0,
+      todaySpinCount: 0,
+      todayScratchCount: 0,
+      todayTaskCount: 0,
+      lastActiveDate: getTodayDateStr(),
+      taskLastTimes: {}, // Individual Task Cooldown Tracking Object
+      completedTasks: {}
+    };
+
+    // Dynamic Admin Settings State
+    let adminSettings = {
+      adReward: 2.50,
+      spinReward: 5.00,
+      scratchReward: 2.00,
+      dailyBonus: 5.00,
+      minWithdraw: 50.00,
+      adLimit: 10,
+      spinLimit: 5,
+      scratchLimit: 3,
+      taskLimit: 10,
+      taskCooldown: 0, // Default break time / cooldown
+      adTimer: 16,     // Fixed: Changed default from 14 to 16
+      spinTimer: 16,   // Fixed: Changed default from 14 to 16
+      scratchTimer: 16,// Fixed: Changed default from 14 to 16
+      taskTimer: 10,
+      noticeSpeed: 18, // dynamic notice speed in seconds
+      adScriptWatch: "",
+      adScriptSpin: "",
+      adScriptScratch: "",
+      adScriptTask: "", // Task Ad script support
+      adScriptGlobal: ""
+    };
+
+    // Global Cooldown Loop Interval
+    let taskCooldownInterval = null;
+
+    // BANNER SLIDER LOGIC
+    let currentBannerIndex = 0;
+    let bannerTotalCount = 3;
+    const bannerTrack = document.getElementById('bannerTrack');
+
+    function goToSlide(index) {
+      currentBannerIndex = index;
+      if(bannerTrack) {
+        bannerTrack.style.transform = `translateX(-${currentBannerIndex * 100}%)`;
+      }
+      const dots = document.querySelectorAll('.banner-dot');
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentBannerIndex);
+      });
     }
 
-    function toggleThreeDotMenu(event) {
-      if (event) event.stopPropagation();
-      const menu = document.getElementById('threeDotMenu');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
-
-    window.addEventListener('click', function(e) {
-      const menu = document.getElementById('threeDotMenu');
-      if (menu && menu.style.display === 'block') {
-        menu.style.display = 'none';
+    // Automatic Banner Slide Interval (Every 4 Seconds)
+    setInterval(() => {
+      if (bannerTotalCount > 0) {
+        currentBannerIndex = (currentBannerIndex + 1) % bannerTotalCount;
+        goToSlide(currentBannerIndex);
       }
-    });
+    }, 4000);
 
-    function switchAdminTab(tabId, el) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-
-      document.getElementById(tabId).classList.add('active');
-
-      if (el) {
-        el.classList.add('active');
-      } else {
-        const navBtns = document.querySelectorAll('.admin-nav .nav-btn');
-        navBtns.forEach(btn => {
-          if (btn.getAttribute('onclick').includes(tabId)) {
-            btn.classList.add('active');
-          }
-        });
-      }
-
-      // Automatically close sidebar on mobile after choosing an option
-      if (window.innerWidth <= 768) {
-        document.getElementById('sidebar').classList.remove('open');
-      }
-    }
-
-    // Helper: Extract URL if input contains direct link or script tag
-    function extractAdUrl(input) {
-      if (!input) return '';
-      input = input.trim();
-      if (input.startsWith('http://') || input.startsWith('https://')) {
-        return input;
-      }
-      const match = input.match(/src=["'](.*?)["']/);
-      if (match && match[1]) {
-        return match[1];
-      }
-      return input;
-    }
-
-    // 1. Load Realtime Users Data
-    db.ref('users').on('value', snapshot => {
-      const users = snapshot.val() || {};
-      const userKeys = Object.keys(users);
+    // DYNAMIC RENDER BANNERS FROM ADMIN DATA
+    function renderDynamicBanners(bannersData) {
+      if (!bannerTrack) return;
       
-      document.getElementById('totalUsers').innerText = userKeys.length;
-      document.getElementById('activeUsers').innerText = userKeys.length;
-
-      let totalBal = 0;
-      const userTableBody = document.getElementById('userTableBody');
-      userTableBody.innerHTML = '';
-
-      if(userKeys.length === 0) {
-        userTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">কোনো ইউজার পাওয়া যায়নি</td></tr>`;
+      let bannerList = [];
+      if (Array.isArray(bannersData)) {
+        bannerList = bannersData.filter(item => item);
+      } else if (typeof bannersData === 'object' && bannersData !== null) {
+        bannerList = Object.values(bannersData);
       }
 
-      userKeys.forEach(id => {
-        const u = users[id];
-        totalBal += parseFloat(u.balance || 0);
+      if (bannerList.length === 0) return;
 
-        const isBanned = u.status === 'Banned';
-        const row = document.createElement('tr');
+      bannerTrack.innerHTML = '';
+      const indicatorsContainer = document.getElementById('bannerIndicators');
+      if (indicatorsContainer) indicatorsContainer.innerHTML = '';
+
+      bannerTotalCount = bannerList.length;
+
+      bannerList.forEach((banner, index) => {
+        const slide = document.createElement('div');
+        slide.className = 'banner-slide';
         
-        const name = u.name || u.username || 'N/A';
-        const phone = u.phone || u.number || u.mobile || 'N/A';
-        const email = u.email || 'N/A';
-        const password = u.password || 'N/A';
-        const balance = (parseFloat(u.balance) || 0).toFixed(2);
+        const imageUrl = typeof banner === 'string' ? banner : (banner.image || banner.img || banner.url || banner.bannerUrl);
+        const linkUrl = typeof banner === 'object' ? (banner.link || banner.target || '') : '';
+        const titleText = typeof banner === 'object' ? (banner.title || '') : '';
+        const descText = typeof banner === 'object' ? (banner.desc || banner.description || '') : '';
 
-        row.innerHTML = `
-          <td>#${id}</td>
-          <td><strong>${name}</strong></td>
-          <td>${phone}</td>
-          <td>${email}</td>
-          <td><span class="user-pass-code">${password}</span></td>
-          <td>৳ ${balance}</td>
-          <td><span class="badge ${isBanned ? 'badge-rejected' : 'badge-approved'}" id="status-${id}">${isBanned ? 'Banned' : 'Active'}</span></td>
-          <td>
-            <button class="btn-action btn-edit" onclick="viewUserHistory('${id}', '${name.replace(/'/g, "\\'")}')">History</button>
-            <button class="btn-action btn-edit" style="background:#8b5cf6;" onclick="openEditUserModal('${id}')">Edit</button>
-            <button class="btn-action btn-reject" onclick="toggleBan('${id}')">${isBanned ? 'Unban' : 'Ban'}</button>
-            <button class="btn-action btn-reject" style="background:#dc2626;" onclick="deleteUser('${id}')">Delete</button>
-          </td>
-        `;
-        userTableBody.appendChild(row);
+        if (imageUrl && imageUrl.trim() !== '') {
+          slide.innerHTML = `<img src="${imageUrl}" alt="Banner ${index+1}">`;
+        } else {
+          slide.innerHTML = `
+            <div class="banner-icon">🚀</div>
+            <div class="banner-info">
+              <h4>${titleText || 'বিশেষ অফার!'}</h4>
+              <p>${descText || 'আমাদের প্ল্যাটফর্মে কাজ করে প্রতিদিন রিওয়ার্ড জিতুন।'}</p>
+            </div>
+          `;
+        }
+
+        if (linkUrl && linkUrl.trim() !== '') {
+          slide.onclick = () => {
+            let targetUrl = linkUrl.trim();
+            if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+              targetUrl = 'https://' + targetUrl;
+            }
+            window.open(targetUrl, '_blank');
+          };
+        }
+
+        bannerTrack.appendChild(slide);
+
+        if (indicatorsContainer) {
+          const dot = document.createElement('span');
+          dot.className = `banner-dot ${index === 0 ? 'active' : ''}`;
+          dot.onclick = () => goToSlide(index);
+          indicatorsContainer.appendChild(dot);
+        }
       });
 
-      document.getElementById('totalDistributed').innerText = "৳ " + totalBal.toFixed(2);
+      currentBannerIndex = 0;
+      goToSlide(0);
+    }
+
+    // Generate unique random referral code
+    function generateRefCode() {
+      return "REF" + Math.floor(100000 + Math.random() * 900000);
+    }
+
+    // Convert English digits to Bengali digits
+    function toBengaliDigits(num) {
+      if (num === undefined || num === null) return '০';
+      const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+      return num.toString().replace(/\d/g, d => bnDigits[d]);
+    }
+
+    // AUTH SWITCH TABS
+    function switchAuthMode(mode) {
+      const loginForm = document.getElementById('loginForm');
+      const regForm = document.getElementById('registerForm');
+      const tabLoginBtn = document.getElementById('tabLoginBtn');
+      const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+
+      if (mode === 'login') {
+        loginForm.style.display = 'block';
+        regForm.style.display = 'none';
+        tabLoginBtn.classList.add('active');
+        tabRegisterBtn.classList.remove('active');
+      } else {
+        loginForm.style.display = 'none';
+        regForm.style.display = 'block';
+        tabLoginBtn.remove('active');
+        tabRegisterBtn.classList.add('active');
+      }
+    }
+
+    // FIREBASE AUTH LISTENER
+    auth.onAuthStateChanged((user) => {
+      const authOverlay = document.getElementById('authOverlay');
+      if (user) {
+        currentUserId = user.uid;
+        userRef = database.ref('users/' + currentUserId);
+        authOverlay.style.display = 'none';
+        initUserDatabaseSync();
+        loadUserWithdrawals();
+      } else {
+        currentUserId = null;
+        userRef = null;
+        authOverlay.style.display = 'flex';
+      }
     });
 
-    function openEditUserModal(userId) {
-      db.ref(`users/${userId}`).once('value', snapshot => {
-        const u = snapshot.val() || {};
-        document.getElementById('editUserId').value = userId;
-        document.getElementById('editUserName').value = u.name || u.username || '';
-        document.getElementById('editUserPhone').value = u.phone || u.number || u.mobile || '';
-        document.getElementById('editUserEmail').value = u.email || '';
-        document.getElementById('editUserPassword').value = u.password || '';
-        document.getElementById('editUserBalance').value = u.balance || 0;
+    // LOGIN HANDLER
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('loginSubmitBtn');
 
-        document.getElementById('editUserModal').style.display = 'flex';
-      });
-    }
+      btn.disabled = true;
+      btn.innerText = "অপেক্ষা করুন...";
 
-    function closeEditUserModal() {
-      document.getElementById('editUserModal').style.display = 'none';
-    }
-
-    function saveUserEdit() {
-      const userId = document.getElementById('editUserId').value;
-      if (!userId) return;
-
-      const updatedData = {
-        name: document.getElementById('editUserName').value,
-        phone: document.getElementById('editUserPhone').value,
-        number: document.getElementById('editUserPhone').value,
-        email: document.getElementById('editUserEmail').value,
-        password: document.getElementById('editUserPassword').value,
-        balance: parseFloat(document.getElementById('editUserBalance').value) || 0
-      };
-
-      db.ref(`users/${userId}`).update(updatedData)
+      auth.signInWithEmailAndPassword(email, password)
         .then(() => {
-          alert(`ইউজার #${userId} এর তথ্য সফলভাবে সেভ করা হয়েছে!`);
-          closeEditUserModal();
+          btn.disabled = false;
+          btn.innerText = "প্রবেশ করুন";
         })
-        .catch(err => {
-          alert("এরর: " + err.message);
+        .catch((error) => {
+          btn.disabled = false;
+          btn.innerText = "প্রবেশ করুন";
+          alert("লগইন ব্যর্থ হয়েছে: " + error.message);
         });
     }
 
-    function deleteUser(userId) {
-      if (confirm(`আপনি কি নিশ্চিত যে ইউজার #${userId} কে স্থায়ীভাবে মুছে ফেলতে চান?`)) {
-        db.ref(`users/${userId}`).remove()
-          .then(() => {
-            alert(`User #${userId} স্থায়ীভাবে ডিলিট করা হয়েছে!`);
-          })
-          .catch(err => {
-            alert("ডিলিট করতে সমস্যা হয়েছে: " + err.message);
+    // REGISTER HANDLER WITH REFERRAL BONUS
+    function handleRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      const givenRefCode = document.getElementById('regRefCode').value.trim();
+      const btn = document.getElementById('regSubmitBtn');
+
+      btn.disabled = true;
+      btn.innerText = "প্রসেসিং হচ্ছে...";
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const newUid = userCredential.user.uid;
+          const selfRefCode = generateRefCode();
+
+          const initialData = {
+            name: name,
+            email: email,
+            balance: 0.00,
+            todayEarned: 0.00,
+            refEarned: 0.00,
+            refCode: selfRefCode,
+            dailyClaimed: false,
+            scratchCards: 3,
+            todayAdCount: 0,
+            todaySpinCount: 0,
+            todayScratchCount: 0,
+            todayTaskCount: 0,
+            lastActiveDate: getTodayDateStr(),
+            taskLastTimes: {},
+            completedTasks: {},
+            joinedAt: new Date().toISOString()
+          };
+
+          database.ref('users/' + newUid).set(initialData).then(() => {
+            if (givenRefCode !== "") {
+              database.ref('users').orderByChild('refCode').equalTo(givenRefCode).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                  snapshot.forEach((childSnapshot) => {
+                    const refUserId = childSnapshot.key;
+                    const refUserData = childSnapshot.val();
+                    const refBonus = 10.00;
+                    
+                    database.ref('users/' + refUserId).update({
+                      balance: (refUserData.balance || 0) + refBonus,
+                      refEarned: (refUserData.refEarned || 0) + refBonus
+                    });
+                  });
+                }
+              });
+            }
+
+            btn.disabled = false;
+            btn.innerText = "রেজিস্ট্রেশন করুন";
+            alert("রেজিস্ট্রেশন সফল হয়েছে!");
           });
+        })
+        .catch((error) => {
+          btn.disabled = false;
+          btn.innerText = "রেজিস্ট্রেশন করুন";
+          alert("রেজিস্ট্রেশন ত্রুটি: " + error.message);
+        });
+    }
+
+    // LOGOUT HANDLER
+    function handleLogout() {
+      if (confirm("আপনি কি নিশ্চিত যে লগআউট করতে চান?")) {
+        auth.signOut().then(() => {
+          alert("সফলভাবে লগআউট করা হয়েছে!");
+        });
       }
     }
 
-    function viewUserHistory(userId, userName) {
-      document.getElementById('historyModalTitle').innerText = `📋 #${userId} (${userName}) - কাজের সময় ও বিস্তারিত`;
-      const modal = document.getElementById('userHistoryModal');
-      const tbody = document.getElementById('userHistoryTableBody');
-      const summaryBox = document.getElementById('userWorkSummary');
-      
-      modal.style.display = 'flex';
-      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">ডেটা লোড হচ্ছে...</td></tr>';
-      document.getElementById('historyTypeFilter').value = "ALL";
-      
-      db.ref(`history/${userId}`).once('value', snapshot => {
-        const historyData = snapshot.val() || {};
-        const historyKeys = Object.keys(historyData).reverse();
-        currentRawHistory = [];
+    // Trigger Ad Network (MONETAG & DIRECT LINK ENHANCED FIX)
+    function triggerAdNetwork(adCodeOrLink) {
+      if (!adCodeOrLink || adCodeOrLink.trim() === "") return;
 
-        let adCount = 0;
-        let spinCount = 0;
-        let scratchCount = 0;
-        let taskCount = 0;
+      let trimmed = adCodeOrLink.trim();
 
-        historyKeys.forEach(key => {
-          const item = historyData[key];
-          currentRawHistory.push(item);
+      // Ensure protocol relative URLs like //libtl.com get https:
+      if (trimmed.startsWith("//")) {
+        trimmed = "https:" + trimmed;
+      }
 
-          const t = (item.type || item.workName || item.title || item.taskTitle || '').toUpperCase();
-          if (t.includes('AD')) adCount++;
-          else if (t.includes('SPIN')) spinCount++;
-          else if (t.includes('SCRATCH')) scratchCount++;
-          else taskCount++;
-        });
-
-        db.ref(`users/${userId}`).once('value', uSnap => {
-          const u = uSnap.val() || {};
-          summaryBox.innerHTML = `
-            <div class="stat-box" style="text-align:center;">
-              <div class="stat-title">Watch Ads</div>
-              <div class="stat-value" style="font-size:0.95rem;">${u.todayAdCount || adCount} টি</div>
-            </div>
-            <div class="stat-box" style="text-align:center;">
-              <div class="stat-title">Spin Completed</div>
-              <div class="stat-value" style="font-size:0.95rem;">${u.todaySpinCount || spinCount} টি</div>
-            </div>
-            <div class="stat-box" style="text-align:center;">
-              <div class="stat-title">Scratch Completed</div>
-              <div class="stat-value" style="font-size:0.95rem;">${u.todayScratchCount || scratchCount} টি</div>
-            </div>
-            <div class="stat-box" style="text-align:center;">
-              <div class="stat-title">Task Clicks</div>
-              <div class="stat-value" style="font-size:0.95rem; color:var(--accent-blue);">${u.todayTaskCount || taskCount} টি</div>
-            </div>
-          `;
-        });
-
-        renderFilteredHistory(currentRawHistory);
-      });
-    }
-
-    function renderFilteredHistory(items) {
-      const tbody = document.getElementById('userHistoryTableBody');
-      tbody.innerHTML = '';
-
-      if(items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">এখনো কোনো কাজের ইতিহাস জমা হয়নি</td></tr>';
+      // Direct Link Check
+      if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        window.open(trimmed, '_blank');
         return;
       }
 
-      items.forEach(item => {
-        let formattedDate = 'N/A';
-        if (item.timestamp) {
-          formattedDate = new Date(item.timestamp).toLocaleString('bn-BD');
-        } else if (item.date) {
-          formattedDate = item.date;
+      // HTML Script Embed (Monetag/In-Page) handling
+      try {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = trimmed;
+        
+        const scripts = tempDiv.querySelectorAll('script');
+        if (scripts.length > 0) {
+          scripts.forEach(oldScript => {
+            const newScript = document.createElement('script');
+            
+            // Extract attributes like data-zone, data-sdk
+            let dataSdkFunc = oldScript.getAttribute('data-sdk');
+
+            Array.from(oldScript.attributes).forEach(attr => {
+              newScript.setAttribute(attr.name, attr.value);
+            });
+
+            if (oldScript.src) {
+              let srcUrl = oldScript.src;
+              if (srcUrl.startsWith("//")) srcUrl = "https:" + srcUrl;
+              newScript.src = srcUrl;
+              newScript.async = true;
+
+              newScript.onload = () => {
+                // If data-sdk function is specified (e.g. show_11616602) trigger it immediately
+                if (dataSdkFunc && typeof window[dataSdkFunc] === 'function') {
+                  window[dataSdkFunc]();
+                } else {
+                  if (typeof window.show_883920 === 'function') window.show_883920();
+                  if (typeof window.show_rewarded_ad === 'function') window.show_rewarded_ad();
+                }
+              };
+            } else {
+              newScript.textContent = oldScript.textContent || oldScript.innerHTML;
+            }
+
+            document.body.appendChild(newScript);
+
+            // Execute function if already present in scope
+            if (dataSdkFunc && typeof window[dataSdkFunc] === 'function') {
+              window[dataSdkFunc]();
+            }
+          });
+        } else {
+          document.getElementById('globalAdContainer').appendChild(tempDiv);
         }
 
-        const tr = document.createElement('tr');
-        const workTitle = item.workName || item.title || item.taskTitle || item.type || 'Task Completed';
-        
-        tr.innerHTML = `
-          <td><strong>${workTitle}</strong></td>
-          <td style="color:var(--accent-green);">+৳ ${(parseFloat(item.amount || item.reward || 0)).toFixed(2)}</td>
-          <td style="font-size:0.75rem; color:var(--text-muted);">${formattedDate}</td>
-        `;
-        tbody.appendChild(tr);
-      });
+        // Global Monetag / Rewarded fallback invocations
+        if (typeof window.show_883920 === 'function') window.show_883920();
+        if (typeof window.show_rewarded_ad === 'function') window.show_rewarded_ad();
+
+      } catch (e) {
+        console.error("Ad script execution error:", e);
+      }
     }
 
-    function filterUserHistory() {
-      const filterVal = document.getElementById('historyTypeFilter').value.toUpperCase();
-      if(filterVal === 'ALL') {
-        renderFilteredHistory(currentRawHistory);
-        return;
-      }
+    // HELPER FUNCTION FOR DYNAMIC NOTICE UPDATE
+    function updateNoticeUI(noticeMessage) {
+      if (!noticeMessage || String(noticeMessage).trim() === "") return;
+      const text = String(noticeMessage).trim();
+      
+      const scrollingNoticeText = document.getElementById('scrollingNoticeText');
+      const welcomeNoticeText = document.getElementById('welcomeNoticeText');
+      
+      if (scrollingNoticeText) scrollingNoticeText.innerText = text;
+      if (welcomeNoticeText) welcomeNoticeText.innerText = text;
+    }
 
-      const filtered = currentRawHistory.filter(item => {
-        const title = (item.type || item.workName || item.title || item.taskTitle || '').toUpperCase();
+    // BELL NOTICE BUTTON ACTION - Triggers UI Modal
+    function showBellNotice() {
+      toggleModal('welcomePopupModal', true);
+    }
+
+    // HELPER FUNCTION FOR DYNAMIC NOTICE SPEED
+    function updateNoticeSpeed(speed) {
+      if (!speed) return;
+      const numSpeed = parseFloat(speed);
+      if (!isNaN(numSpeed) && numSpeed > 0) {
+        adminSettings.noticeSpeed = numSpeed;
+        document.documentElement.style.setProperty('--notice-speed', numSpeed + 's');
+      }
+    }
+
+    // Listen to Admin Settings Changes Realtime
+    database.ref('settings').on('value', (snapshot) => {
+      const settings = snapshot.val();
+      if (settings) {
+        if (settings.adReward !== undefined) adminSettings.adReward = parseFloat(settings.adReward) || 0;
+        if (settings.spinReward !== undefined) adminSettings.spinReward = parseFloat(settings.spinReward) || 0;
+        if (settings.scratchReward !== undefined) adminSettings.scratchReward = parseFloat(settings.scratchReward) || 0;
+        if (settings.dailyBonus !== undefined) adminSettings.dailyBonus = parseFloat(settings.dailyBonus) || 0;
         
-        if (filterVal === 'TASK') {
-          return !title.includes('AD') && !title.includes('SPIN') && !title.includes('SCRATCH');
+        if (settings.minWithdraw !== undefined) {
+          adminSettings.minWithdraw = parseFloat(settings.minWithdraw) || 0;
         }
-        return title.includes(filterVal);
-      });
 
-      renderFilteredHistory(filtered);
-    }
+        // Limits mapping from Firebase (checking multiple possible key names)
+        const parsedAdLimit = settings.adLimit !== undefined ? settings.adLimit : (settings.watchAdsLimit !== undefined ? settings.watchAdsLimit : settings.dailyWatchAdsLimit);
+        if (parsedAdLimit !== undefined) adminSettings.adLimit = parseInt(parsedAdLimit) || 0;
 
-    function closeHistoryModal() {
-      document.getElementById('userHistoryModal').style.display = 'none';
-    }
+        const parsedSpinLimit = settings.spinLimit !== undefined ? settings.spinLimit : settings.dailySpinLimit;
+        if (parsedSpinLimit !== undefined) adminSettings.spinLimit = parseInt(parsedSpinLimit) || 0;
 
-    // 2. Load Withdrawal Requests Realtime
-    db.ref('withdrawals').on('value', snapshot => {
-      const allWithdrawals = snapshot.val() || {};
-      const withdrawRequestsTable = document.getElementById('withdrawRequestsTable');
-      const dashRecentWithdraws = document.getElementById('dashRecentWithdraws');
+        const parsedScratchLimit = settings.scratchLimit !== undefined ? settings.scratchLimit : settings.dailyScratchLimit;
+        if (parsedScratchLimit !== undefined) adminSettings.scratchLimit = parseInt(parsedScratchLimit) || 0;
 
-      withdrawRequestsTable.innerHTML = '';
-      dashRecentWithdraws.innerHTML = '';
+        if (settings.taskLimit !== undefined) adminSettings.taskLimit = parseInt(settings.taskLimit) || (settings.dailyTaskLimit ? parseInt(settings.dailyTaskLimit) : 10);
 
-      let pendingTotal = 0;
-      let hasPending = false;
-      let hasRecent = false;
+        // SYNC TASK COOLDOWN / BREAK TIME / BACKTIME FROM ADMIN
+        const cooldownVal = settings.taskCooldown !== undefined ? settings.taskCooldown : (settings.breakTime !== undefined ? settings.breakTime : (settings.cooldown !== undefined ? settings.cooldown : (settings.taskBreakTime !== undefined ? settings.taskBreakTime : settings.backTime)));
+        if (cooldownVal !== undefined) {
+          adminSettings.taskCooldown = parseFloat(cooldownVal) || 0;
+        }
 
-      Object.keys(allWithdrawals).forEach(userId => {
-        const userReqs = allWithdrawals[userId];
-        Object.keys(userReqs).forEach(reqId => {
-          const req = userReqs[reqId];
+        // --- FIXED DYNAMIC TIMERS READ FROM ADMIN PANEL (Support All Key Variations) ---
+        const rawWatchTimer = settings.watchAdsTimer !== undefined ? settings.watchAdsTimer : (settings.adTimer !== undefined ? settings.adTimer : (settings.watchAdTimer !== undefined ? settings.watchAdTimer : (settings.adsTimer !== undefined ? settings.adsTimer : (settings.ad_timer !== undefined ? settings.ad_timer : settings.watch_timer))));
+        if (rawWatchTimer !== undefined && !isNaN(parseInt(rawWatchTimer))) {
+          adminSettings.adTimer = parseInt(rawWatchTimer);
+        }
 
-          let dateStr = 'N/A';
-          if (req.timestamp) {
-            dateStr = new Date(req.timestamp).toLocaleString('bn-BD');
-          } else if (req.date) {
-            dateStr = req.date;
-          }
+        const rawSpinTimer = settings.spinTimer !== undefined ? settings.spinTimer : (settings.spinWheelTimer !== undefined ? settings.spinWheelTimer : (settings.wheelTimer !== undefined ? settings.wheelTimer : settings.spin_timer));
+        if (rawSpinTimer !== undefined && !isNaN(parseInt(rawSpinTimer))) {
+          adminSettings.spinTimer = parseInt(rawSpinTimer);
+        }
 
-          if (req.status === 'Pending') {
-            hasPending = true;
-            pendingTotal += parseFloat(req.amount || 0);
+        const rawScratchTimer = settings.scratchTimer !== undefined ? settings.scratchTimer : (settings.scratchCardTimer !== undefined ? settings.scratchCardTimer : (settings.cardTimer !== undefined ? settings.cardTimer : settings.scratch_timer));
+        if (rawScratchTimer !== undefined && !isNaN(parseInt(rawScratchTimer))) {
+          adminSettings.scratchTimer = parseInt(rawScratchTimer);
+        }
 
-            const row = document.createElement('tr');
-            row.innerHTML = `
-              <td>#${userId}</td>
-              <td>${req.method}</td>
-              <td>${req.account}</td>
-              <td>৳ ${parseFloat(req.amount).toFixed(2)}</td>
-              <td style="font-size:0.75rem; color:var(--text-muted);">${dateStr}</td>
-              <td>
-                <button class="btn-action btn-approve" onclick="processWithdraw('${userId}', '${reqId}', true, ${req.amount})">Approve</button>
-                <button class="btn-action btn-reject" onclick="processWithdraw('${userId}', '${reqId}', false, ${req.amount})">Reject</button>
-                <button class="btn-action btn-reject" style="background:#dc2626;" onclick="deleteWithdraw('${userId}', '${reqId}')">Delete</button>
-              </td>
-            `;
-            withdrawRequestsTable.appendChild(row);
-          }
+        if (settings.taskTimer !== undefined && !isNaN(parseInt(settings.taskTimer))) {
+          adminSettings.taskTimer = parseInt(settings.taskTimer);
+        }
 
-          hasRecent = true;
-          const dashRow = document.createElement('tr');
-          const badgeClass = req.status === 'Approved' ? 'badge-approved' : (req.status === 'Rejected' ? 'badge-rejected' : 'badge-pending');
-          dashRow.innerHTML = `
-            <td>#${userId}</td>
-            <td>${req.method}</td>
-            <td>৳ ${parseFloat(req.amount).toFixed(2)}</td>
-            <td style="font-size:0.75rem; color:var(--text-muted);">${dateStr}</td>
-            <td><span class="badge ${badgeClass}">${req.status}</span></td>
-          `;
-          dashRecentWithdraws.appendChild(dashRow);
-        });
-      });
+        // SYNC BANNERS FROM ADMIN
+        const bannersData = settings.banners || settings.bannerList || settings.banner || settings.slider;
+        if (bannersData) {
+          renderDynamicBanners(bannersData);
+        }
 
-      if (!hasPending) {
-        withdrawRequestsTable.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">কোনো পেন্ডিং উইথড্র নেই</td></tr>`;
+        // Dynamically Update Notice Speed from Admin Panel Settings
+        const speedVal = settings.noticeSpeed || settings.notice_speed || settings.scrollSpeed || settings.tickerSpeed;
+        if (speedVal) {
+          updateNoticeSpeed(speedVal);
+        }
+
+        if (settings.adScriptWatch !== undefined) adminSettings.adScriptWatch = settings.adScriptWatch;
+        if (settings.adScriptSpin !== undefined) adminSettings.adScriptSpin = settings.adScriptSpin;
+        if (settings.adScriptScratch !== undefined) adminSettings.adScriptScratch = settings.adScriptScratch;
+        if (settings.adScriptTask !== undefined) adminSettings.adScriptTask = settings.adScriptTask;
+        if (settings.adScriptTaskCode !== undefined) adminSettings.adScriptTask = settings.adScriptTaskCode;
+        if (settings.taskAdScript !== undefined) adminSettings.adScriptTask = settings.taskAdScript;
+        
+        if (settings.adScriptGlobal !== undefined && settings.adScriptGlobal !== adminSettings.adScriptGlobal) {
+          adminSettings.adScriptGlobal = settings.adScriptGlobal;
+          document.getElementById('globalAdContainer').innerHTML = "";
+          triggerAdNetwork(adminSettings.adScriptGlobal);
+        }
+
+        document.getElementById('displayAdReward').innerText = adminSettings.adReward.toFixed(2);
+        document.getElementById('displaySpinReward').innerText = adminSettings.spinReward.toFixed(2);
+        document.getElementById('displayScratchReward').innerText = adminSettings.scratchReward.toFixed(2);
+        document.getElementById('displayDailyBonus').innerText = adminSettings.dailyBonus.toFixed(2);
+        
+        document.getElementById('displayMinWithdraw').innerText = adminSettings.minWithdraw.toFixed(2);
+        document.getElementById('withdrawAmount').placeholder = adminSettings.minWithdraw.toFixed(2);
+
+        document.getElementById('scratchAmountText').innerText = "৳ " + adminSettings.scratchReward.toFixed(2);
+
+        updateUI();
+        renderTasks();
+
+        const maintenanceOverlay = document.getElementById('maintenanceOverlay');
+        if (settings.maintenance) {
+          maintenanceOverlay.style.display = 'flex';
+        } else {
+          maintenanceOverlay.style.display = 'none';
+        }
+
+        const noticeMessage = (typeof settings === 'string') ? settings : 
+          (settings.announcement || settings.notice || settings.scrollingNotice || settings.scrollingText || 
+           settings.ticker || settings.noticeText || settings.welcomeNotice || settings.appNotice || 
+           settings.notice_text || settings.message || settings.msg);
+        
+        if (noticeMessage) {
+          updateNoticeUI(noticeMessage);
+        }
       }
-      if (!hasRecent) {
-        dashRecentWithdraws.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">কোনো ডেটা পাওয়া যায়নি</td></tr>`;
-      }
-
-      document.getElementById('pendingWithdrawAmount').innerText = "৳ " + pendingTotal.toFixed(2);
     });
 
-    function processWithdraw(userId, reqId, approved, amount) {
-      const status = approved ? 'Approved' : 'Rejected';
-      db.ref(`withdrawals/${userId}/${reqId}`).update({ status: status });
-
-      if (!approved) {
-        db.ref(`users/${userId}/balance`).transaction(current => (current || 0) + parseFloat(amount));
-        alert("উত্তোলন রিকোয়েস্ট রিজেক্ট করে ব্যালেন্স রিফান্ড করা হয়েছে!");
-      } else {
-        alert("উত্তোলন রিকোয়েস্ট সফলভাবে এপ্রুভ করা হয়েছে!");
+    // DIRECT LISTENERS FOR SEPARATE BANNERS NODE IN FIREBASE
+    database.ref('banners').on('value', (snapshot) => {
+      const val = snapshot.val();
+      if (val) {
+        renderDynamicBanners(val);
       }
-    }
+    });
 
-    function deleteWithdraw(userId, reqId) {
-      if (confirm("আপনি কি নিশ্চিত যে এই উইথড্র রিকোয়েস্টটি মুছে ফেলতে চান?")) {
-        db.ref(`withdrawals/${userId}/${reqId}`).remove()
-          .then(() => alert("উইথড্র রিকোয়েস্ট মুছে ফেলা হয়েছে!"))
-          .catch(err => alert("এরর: " + err.message));
+    database.ref('bannerList').on('value', (snapshot) => {
+      const val = snapshot.val();
+      if (val) {
+        renderDynamicBanners(val);
       }
+    });
+
+    // DIRECT LISTENERS FOR SEPARATE NOTICE NODES IN FIREBASE
+    database.ref('notice').on('value', (snapshot) => {
+      const val = snapshot.val();
+      if (val) {
+        const msg = (typeof val === 'object') ? (val.text || val.notice || val.message || val.announcement) : val;
+        updateNoticeUI(msg);
+        if (typeof val === 'object' && (val.speed || val.noticeSpeed)) {
+          updateNoticeSpeed(val.speed || val.noticeSpeed);
+        }
+      }
+    });
+
+    database.ref('announcement').on('value', (snapshot) => {
+      const val = snapshot.val();
+      if (val) {
+        const msg = (typeof val === 'object') ? (val.text || val.notice || val.message || val.announcement) : val;
+        updateNoticeUI(msg);
+      }
+    });
+
+    // Synchronize Logged in User Data
+    function initUserDatabaseSync() {
+      if (!userRef) return;
+
+      userRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          userState = { ...userState, ...data };
+          if (!userState.taskLastTimes) userState.taskLastTimes = {};
+
+          const today = getTodayDateStr();
+          if (userState.lastActiveDate !== today) {
+            userState.todayAdCount = 0;
+            userState.todaySpinCount = 0;
+            userState.todayScratchCount = 0;
+            userState.todayTaskCount = 0;
+            userState.dailyClaimed = false;
+            userState.completedTasks = {};
+            userState.taskLastTimes = {};
+            userState.lastActiveDate = today;
+            userRef.update({
+              todayAdCount: 0,
+              todaySpinCount: 0,
+              todayScratchCount: 0,
+              todayTaskCount: 0,
+              dailyClaimed: false,
+              completedTasks: {},
+              taskLastTimes: {},
+              lastActiveDate: today
+            });
+          }
+
+          updateUI();
+          renderTasks(); // Re-render tasks when userState completedTasks or cooldown updates
+        }
+      });
     }
 
-    function toggleBan(userId) {
-      const statusEl = document.getElementById(`status-${userId}`);
-      const isCurrentlyBanned = statusEl.innerText === "Banned";
-      const newStatus = isCurrentlyBanned ? 'Active' : 'Banned';
+    // Global variable to store active tasks list
+    let allTasksData = {};
 
-      db.ref(`users/${userId}`).update({ status: newStatus });
-      alert(`User #${userId} is now ${newStatus}!`);
+    // Load Realtime Transactions/Withdrawals History for Active User
+    function loadUserWithdrawals() {
+      if (!currentUserId) return;
+      database.ref('withdrawals/' + currentUserId).on('value', (snapshot) => {
+        const history = document.getElementById('transHistory');
+        const withdrawals = snapshot.val();
+        if (!withdrawals) {
+          history.innerHTML = `<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">এখনো কোনো ট্রানজেকশন হয়নি</p>`;
+          return;
+        }
+
+        let html = '';
+        const list = Object.values(withdrawals).reverse();
+        list.forEach(item => {
+          let color = '#f59e0b';
+          if (item.status === 'Approved' || item.status === 'Success') color = '#10b981';
+          if (item.status === 'Rejected') color = '#ef4444';
+
+          html += `<div style="display:flex; justify-content:space-between; font-size:0.8rem; padding: 6px 0; border-bottom: 1px solid var(--card-border);">
+            <span>${item.method} (${item.account})</span>
+            <span style="color:${color}; font-weight: bold;">${item.status || 'Pending'} ৳${parseFloat(item.amount || 0).toFixed(2)}</span>
+          </div>`;
+        });
+
+        history.innerHTML = html;
+      });
     }
 
-    // Manage Tasks Realtime
-    db.ref('tasks').on('value', snapshot => {
-      const tasks = snapshot.val() || {};
-      const taskList = document.getElementById('taskList');
-      taskList.innerHTML = '';
+    // Fetch Tasks Realtime (Admin Sync Enabled)
+    database.ref('tasks').on('value', (snapshot) => {
+      allTasksData = snapshot.val() || {};
+      renderTasks();
+    });
 
-      const taskKeys = Object.keys(tasks);
-      if(taskKeys.length === 0) {
-        taskList.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted); text-align:center;">কোনো একটিভ টাস্ক নেই</p>`;
+    // Variable to check if an active task timer is running right now
+    let isRunningTaskTimer = false;
+
+    // Helper: calculate task cooldown in seconds
+    function getTaskCooldownSec(task) {
+      let val = 0;
+      if (task) {
+        if (task.cooldown !== undefined) val = task.cooldown;
+        else if (task.breakTime !== undefined) val = task.breakTime;
+        else if (task.backTime !== undefined) val = task.backTime;
+        else if (task.taskCooldown !== undefined) val = task.taskCooldown;
+      }
+      if (!val) {
+        val = adminSettings.taskCooldown || 0;
+      }
+      val = parseFloat(val) || 0;
+      // If setting value is small (e.g. <= 10), assume it's set in minutes, otherwise seconds
+      return val <= 10 ? val * 60 : val;
+    }
+
+    // Render Tasks based on stored database state & Full Box Click Handle
+    function renderTasks() {
+      const userTaskList = document.getElementById('userTaskList');
+      if (!userTaskList) return;
+
+      if (taskCooldownInterval) {
+        clearInterval(taskCooldownInterval);
+        taskCooldownInterval = null;
+      }
+
+      userTaskList.innerHTML = '';
+
+      const taskKeys = Object.keys(allTasksData);
+      const totalTasks = taskKeys.length;
+      
+      const completedCount = userState.todayTaskCount || 0;
+      const maxTaskLimit = adminSettings.taskLimit || (totalTasks > 0 ? totalTasks : 10);
+      
+      const progressText = `${toBengaliDigits(completedCount)}/${toBengaliDigits(maxTaskLimit)}`;
+      const progressBadge = document.getElementById('taskProgressBadge');
+      if (progressBadge) progressBadge.innerText = progressText;
+
+      if (totalTasks === 0) {
+        userTaskList.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">বর্তমানে কোনো একটিভ টাস্ক পাওয়া যায়নি</p>`;
         return;
       }
 
-      taskKeys.forEach(taskId => {
-        const task = tasks[taskId];
-        const div = document.createElement('div');
-        div.style.cssText = "padding: 12px 0; border-bottom: 1px solid var(--card-border); margin-bottom: 8px;";
-        
-        const taskType = task.type || 'Website Visit';
-        const taskLink = task.link ? `<a href="${task.link}" target="_blank" style="color:var(--accent-blue); text-decoration:none; font-size:0.8rem;">🔗 ${task.link}</a>` : '<span style="font-size:0.8rem; color:var(--text-muted);">লিংক দেওয়া নেই</span>';
-        const timerText = task.timer ? `⏱️ ${task.timer}s` : '⏱️ 0s';
-        const cooldownVal = (task.cooldown !== undefined && task.cooldown !== null) ? task.cooldown : (task.cooldownTime || task.breakTime || 0);
-        const cooldownText = `⏳ Break: ${cooldownVal}m`;
-        const adText = task.adCode ? '📢 Ads Attached' : '';
+      const now = Date.now();
+      let hasAnyCooldownRunning = false;
 
-        div.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-              <strong style="font-size:0.95rem;">${task.title}</strong>
-              <div style="font-size: 0.8rem; color: var(--accent-green); margin-top:4px;">
-                Reward: ৳ ${parseFloat(task.reward || 0).toFixed(2)} | <span style="color:var(--text-muted);">${taskType}</span> | <span>${timerText}</span> | <span style="color:var(--accent-warning);">${cooldownText}</span> ${adText ? `<span style="color:var(--accent-warning); margin-left:6px;">${adText}</span>` : ''}
-              </div>
-              <div style="margin-top: 6px; word-break: break-all;">
-                ${taskLink}
-              </div>
-            </div>
-            <button class="btn-action btn-reject" onclick="deleteTask('${taskId}')">Delete</button>
+      let index = 1;
+      taskKeys.forEach(taskId => {
+        const task = allTasksData[taskId];
+        const isLimitReached = (userState.todayTaskCount || 0) >= adminSettings.taskLimit;
+
+        // **স্বতন্ত্র টাস্ক ব্যাকটাইম হিসাব:** শুধুমাত্র এই নির্দিষ্ট টাস্কের লাস্ট টাইম ব্যবহার করা
+        const lastTimeForThisTask = (userState.taskLastTimes && userState.taskLastTimes[taskId]) ? userState.taskLastTimes[taskId] : 0;
+        const timePassedSec = Math.floor((now - lastTimeForThisTask) / 1000);
+
+        const cooldownSec = getTaskCooldownSec(task);
+        const remainingCooldownSec = Math.max(0, cooldownSec - timePassedSec);
+
+        if (remainingCooldownSec > 0) {
+          hasAnyCooldownRunning = true;
+        }
+
+        const isCoolingDown = remainingCooldownSec > 0;
+        
+        // **সঠিক লজিক চেক:** Cooldown চলাকালীন অবস্থায় Completed স্ট্যাটাস ক্লিয়ার রাখা
+        let isDone = userState.completedTasks && userState.completedTasks[taskId] === true;
+        if (!isCoolingDown && isDone) {
+          // Cooldown শেষ হলে Local State ও Firebase থেকে completedTasks ক্লিয়ার করে দেওয়া যাতে পুনরায় করা যায়
+          if (userState.completedTasks) delete userState.completedTasks[taskId];
+          if (userRef) database.ref(`users/${currentUserId}/completedTasks/${taskId}`).remove();
+          isDone = false;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'glass-card';
+        
+        const taskTitle = task.title || 'নতুন টাস্ক';
+        const taskDesc = task.description || task.desc || task.details || 'টাস্কটি সম্পন্ন করে আয় করুন';
+        const taskLink = task.link || task.url || '';
+        const taskReward = parseFloat(task.reward || 0);
+        
+        let taskTimerRaw = task.timer !== undefined ? task.timer : (task.taskTimer !== undefined ? task.taskTimer : (task.duration !== undefined ? task.duration : task.time));
+        let taskTimer = parseInt(taskTimerRaw);
+        if (isNaN(taskTimer)) {
+          taskTimer = parseInt(adminSettings.taskTimer) || 0;
+        }
+
+        let buttonText = 'Complete Task';
+        let buttonDisabled = false;
+        let buttonStyle = '';
+
+        // **সঠিক স্ট্যাটাস অগ্রাধিকার লজিক**
+        if (isLimitReached) {
+          buttonText = 'Limit Over';
+          buttonDisabled = true;
+          buttonStyle = 'background: #4b5563;';
+        } else if (isCoolingDown && !isRunningTaskTimer) {
+          // যদি এডমিন ব্যাকটাইম সেট করে তবে কাউন্টডাউন টাইমার দেখাবে
+          buttonText = `Wait (${toBengaliDigits(remainingCooldownSec)}s)`;
+          buttonDisabled = true;
+          buttonStyle = 'background: #b45309;';
+        } else if (isDone) {
+          buttonText = 'Completed';
+          buttonDisabled = true;
+          buttonStyle = 'background: #4b5563;';
+        }
+
+        card.style.cursor = (buttonDisabled || isRunningTaskTimer) ? 'default' : 'pointer';
+
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <h4>${taskTitle}</h4>
+            <span style="font-size: 0.75rem; background: rgba(168, 85, 247, 0.2); color: #a855f7; padding: 2px 8px; border-radius: 10px; font-weight: bold;">
+              টাস্ক ${toBengaliDigits(index)}/${toBengaliDigits(totalTasks)}
+            </span>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 6px 0;">${taskDesc}</p>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--accent-green); font-weight: bold;">+ ৳ ${taskReward.toFixed(2)}</span>
+            <button class="btn-primary task-act-btn" style="width: auto; padding: 6px 16px; ${buttonStyle}" ${buttonDisabled ? 'disabled' : ''}>
+              ${buttonText}
+            </button>
           </div>
         `;
-        taskList.appendChild(div);
+
+        // Add Click Listener
+        card.onclick = (e) => {
+          const btn = card.querySelector('.task-act-btn');
+          if (isRunningTaskTimer) return;
+
+          if (isCoolingDown && !isDone && !isLimitReached) {
+            alert(`অনুগ্রহ করে এই টাস্কটির জন্য অপেক্ষা করুন! ব্যাকটাইম চলছে...`);
+            return;
+          }
+          if (!isDone && !isLimitReached && !isCoolingDown && btn && !btn.disabled) {
+            handleTaskAction(btn, taskId, taskReward, encodeURIComponent(taskLink), taskTimer);
+          }
+        };
+
+        userTaskList.appendChild(card);
+        index++;
       });
-    });
 
-    // Add New Task Engine
-    function addNewTask() {
-      const title = document.getElementById('newTaskTitle').value.trim();
-      const type = document.getElementById('newTaskType').value;
-      const reward = parseFloat(document.getElementById('newTaskReward').value) || 0;
-      const timer = parseInt(document.getElementById('newTaskTimer').value) || 0;
-      const cooldown = parseInt(document.getElementById('newTaskCooldown').value) || 0;
-      const link = document.getElementById('newTaskLink').value.trim();
-      const adCode = document.getElementById('newTaskAdCode').value.trim();
+      // REAL-TIME INDIVIDUAL BACKTIME / COOLDOWN COUNTDOWN INTERVAL FOR WAIT TIME DISPLAY
+      if (hasAnyCooldownRunning && !isRunningTaskTimer) {
+        taskCooldownInterval = setInterval(() => {
+          const cooldownBtns = document.querySelectorAll('.task-act-btn');
+          const currentNow = Date.now();
+          let stillCooling = false;
 
-      if (!title || reward <= 0) {
-        alert("টাস্কের নাম এবং সঠিক রিওয়ার্ড দিন!");
+          taskKeys.forEach((taskId, idx) => {
+            const task = allTasksData[taskId];
+            const isLimitReached = (userState.todayTaskCount || 0) >= adminSettings.taskLimit;
+            const b = cooldownBtns[idx];
+
+            const lastTime = (userState.taskLastTimes && userState.taskLastTimes[taskId]) ? userState.taskLastTimes[taskId] : 0;
+            const tPassedSec = Math.floor((currentNow - lastTime) / 1000);
+
+            const cSec = getTaskCooldownSec(task);
+            const remSec = Math.max(0, cSec - tPassedSec);
+
+            if (remSec > 0) stillCooling = true;
+
+            if (b && !isLimitReached && !isRunningTaskTimer) {
+              if (remSec > 0) {
+                b.innerText = `Wait (${toBengaliDigits(remSec)}s)`;
+                b.disabled = true;
+                b.style.background = '#b45309';
+              } else if (b.innerText.startsWith('Wait')) {
+                b.innerText = 'Complete Task';
+                b.disabled = false;
+                b.style.background = '';
+              }
+            }
+          });
+
+          if (!stillCooling) {
+            clearInterval(taskCooldownInterval);
+            taskCooldownInterval = null;
+            renderTasks();
+          }
+        }, 1000);
+      }
+    }
+
+    // Handle Admin Created Tasks (Link + Timer + Reward + Ad Trigger Fix)
+    function handleTaskAction(btn, taskId, reward, encodedLink, timerSec) {
+      if (!btn || btn.disabled || isRunningTaskTimer) return;
+
+      // Check daily task completion limit set by admin
+      if ((userState.todayTaskCount || 0) >= adminSettings.taskLimit) {
+        alert("আজকের টাস্ক পূরণের সীমা শেষ! আগামীকাল আবার চেষ্টা করুন।");
         return;
       }
 
-      const taskData = {
-        title: title,
-        type: type,
-        reward: reward,
-        timer: timer,
-        taskTimer: timer,
-        duration: timer,
-        cooldown: cooldown,
-        cooldownTime: cooldown,
-        cooldownMinutes: cooldown,
-        cooldownInSeconds: cooldown * 60,
-        breakTime: cooldown,
-        link: link || '',
-        url: link || '',
-        adCode: adCode || '',
-        status: 'active',
-        createdAt: firebase.database.ServerValue.TIMESTAMP
-      };
+      // Check Cooldown / Backtime Time before starting specific task
+      const currentTask = allTasksData[taskId];
+      const cooldownSec = getTaskCooldownSec(currentTask);
+      const now = Date.now();
+      const lastTimeForThisTask = (userState.taskLastTimes && userState.taskLastTimes[taskId]) ? userState.taskLastTimes[taskId] : 0;
+      const timePassedSec = Math.floor((now - lastTimeForThisTask) / 1000);
 
-      const newRef = db.ref('tasks').push();
-      newRef.set(taskData)
-        .then(() => {
-          db.ref('settings').update({
-            taskCooldown: cooldown,
-            taskCooldownTimer: cooldown,
-            cooldownTime: cooldown,
-            breakTime: cooldown
-          });
+      if (cooldownSec > 0 && timePassedSec < cooldownSec) {
+        const remainingSec = cooldownSec - timePassedSec;
+        alert(`পরবর্তী টাস্কটি করতে অনুগ্রহ করে ${toBengaliDigits(remainingSec)} সেকেন্ড অপেক্ষা করুন!`);
+        return;
+      }
 
-          document.getElementById('newTaskTitle').value = '';
-          document.getElementById('newTaskReward').value = '';
-          document.getElementById('newTaskTimer').value = '15';
-          document.getElementById('newTaskCooldown').value = '0';
-          document.getElementById('newTaskLink').value = '';
-          document.getElementById('newTaskAdCode').value = '';
+      // Ensure task isn't already marked done in state
+      if (userState.completedTasks && userState.completedTasks[taskId] === true) {
+        btn.disabled = true;
+        btn.innerText = "Completed";
+        btn.style.background = "#4b5563";
+        return;
+      }
 
-          alert("নতুন টাস্ক সফলভাবে পাবলিশ করা হয়েছে!");
-        })
-        .catch(err => {
-          alert("এরর: " + err.message);
+      // 💥 💥 💥 Trigger Task Specific Ad OR Watch Ad Script Set By Admin 💥 💥 💥
+      const taskAdCode = (currentTask && (currentTask.adCode || currentTask.adScript || currentTask.ad)) 
+                          || adminSettings.adScriptTask 
+                          || adminSettings.adScriptWatch;
+      
+      if (taskAdCode) {
+        triggerAdNetwork(taskAdCode);
+      }
+
+      const link = decodeURIComponent(encodedLink || '');
+      reward = parseFloat(reward) || 0;
+      
+      // Parse Admin dynamic task timer duration accurately
+      timerSec = parseInt(timerSec);
+      if (isNaN(timerSec) || timerSec <= 0) {
+        timerSec = parseInt(adminSettings.taskTimer) || 10;
+      }
+
+      btn.disabled = true;
+      isRunningTaskTimer = true;
+
+      if (taskCooldownInterval) {
+        clearInterval(taskCooldownInterval);
+        taskCooldownInterval = null;
+      }
+
+      // Open Task Link / Telegram in new tab if link exists
+      if (link && link.trim() !== "") {
+        let validUrl = link.trim();
+        if (!validUrl.startsWith("http://") && !validUrl.startsWith("https://")) {
+          validUrl = "https://" + validUrl;
+        }
+        try {
+          window.open(validUrl, '_blank');
+        } catch(e) {
+          console.error("Window open error:", e);
+        }
+      }
+
+      // Live Countdown Timer Operation
+      let remainingTime = timerSec;
+      btn.style.opacity = "0.8";
+      btn.innerText = `⏳ (${toBengaliDigits(remainingTime)}s)`;
+
+      const timerInterval = setInterval(() => {
+        remainingTime--;
+        if (remainingTime > 0) {
+          btn.innerText = `⏳ (${toBengaliDigits(remainingTime)}s)`;
+        } else {
+          clearInterval(timerInterval);
+          isRunningTaskTimer = false;
+          finalizeTaskCompletion(btn, taskId, reward);
+        }
+      }, 1000);
+    }
+
+    // Finalize Task Completion with Persistent Storage & Sync to Admin Node
+    function finalizeTaskCompletion(btn, taskId, reward) {
+      if (!currentUserId || !userRef) {
+        alert("ইউজার সেশন পাওয়া যায়নি। অনুগ্রহ করে পুনরায় লগইন করুন।");
+        return;
+      }
+
+      // Already completed check
+      if (userState.completedTasks && userState.completedTasks[taskId] === true) {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerText = "Completed";
+          btn.style.background = "#4b5563";
+          btn.style.opacity = "1";
+        }
+        return;
+      }
+
+      if (!userState.completedTasks) userState.completedTasks = {};
+      if (!userState.taskLastTimes) userState.taskLastTimes = {};
+
+      userState.completedTasks[taskId] = true;
+
+      const numReward = parseFloat(reward) || 0;
+      const completionTime = Date.now();
+
+      // **শুধুমাত্র এই নির্দিষ্ট টাস্কটির জন্য সময় আপডেট করা**
+      userState.taskLastTimes[taskId] = completionTime;
+
+      // Update local state balances, scratchCards, taskCount
+      userState.balance = (parseFloat(userState.balance) || 0) + numReward;
+      userState.todayEarned = (parseFloat(userState.todayEarned) || 0) + numReward;
+      userState.scratchCards = (parseInt(userState.scratchCards) || 0) + 1;
+      userState.todayTaskCount = (parseInt(userState.todayTaskCount) || 0) + 1;
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "Completed";
+        btn.style.background = "#4b5563";
+        btn.style.opacity = "1";
+      }
+
+      // Direct Firebase node update to ensure real-time balance, scratchCards, todayTaskCount, individual taskLastTimes & status save
+      const updates = {};
+      updates['balance'] = userState.balance;
+      updates['todayEarned'] = userState.todayEarned;
+      updates['scratchCards'] = userState.scratchCards;
+      updates['todayTaskCount'] = userState.todayTaskCount;
+      updates['taskLastTimes/' + taskId] = completionTime;
+      updates['completedTasks/' + taskId] = true;
+
+      // 1. Save data under user profile
+      userRef.update(updates).then(() => {
+        // 2. Also send data to admin view node (taskCompletions)
+        const taskTitle = (allTasksData[taskId] && allTasksData[taskId].title) ? allTasksData[taskId].title : 'Task Completion';
+        
+        database.ref('taskCompletions').push({
+          userId: currentUserId,
+          userName: userState.name || 'ইউজার',
+          userEmail: userState.email || '',
+          taskId: taskId,
+          taskTitle: taskTitle,
+          reward: numReward,
+          completedAt: new Date().toISOString()
         });
+
+        // 3. Mark completion count directly inside the specific task node for admin
+        database.ref('tasks/' + taskId + '/completions/' + currentUserId).set({
+          userName: userState.name || 'ইউজার',
+          userEmail: userState.email || '',
+          timestamp: new Date().toISOString()
+        });
+
+        updateUI();
+        renderTasks(); // Re-render to start break/cooldown time for this specific task
+        alert(`🎉 টাস্ক সম্পন্ন হয়েছে!\n\nআপনার ব্যালেন্সে ৳ ${numReward.toFixed(2)} এবং +১টি স্ক্র্যাচ কার্ড সফলভাবে যোগ করা হয়েছে।`);
+      }).catch((err) => {
+        console.error("Task update error:", err);
+        updateUI();
+        renderTasks();
+        alert(`🎉 টাস্ক সম্পন্ন হয়েছে! ৳ ${numReward.toFixed(2)} ও +১টি স্ক্র্যাচ কার্ড যোগ করা হয়েছে।`);
+      });
     }
 
-    function deleteTask(taskId) {
-      if (confirm("আপনি কি নিশ্চিত যে এই টাস্কটি মুছে ফেলতে চান?")) {
-        db.ref(`tasks/${taskId}`).remove();
-        alert("টাস্ক মুছে ফেলা হয়েছে!");
+    // Update UI Elements
+    function updateUI() {
+      const activeName = userState.name || "ইউজার";
+      const firstChar = activeName.charAt(0).toUpperCase();
+
+      document.getElementById('user-name').innerText = "স্বাগতম, " + activeName + "!";
+      document.getElementById('user-id').innerText = "ID: #" + (currentUserId ? currentUserId.substring(0,6).toUpperCase() : "883920");
+      document.getElementById('user-avatar-char').innerText = firstChar;
+      
+      if (document.getElementById('profile-name')) {
+        document.getElementById('profile-name').innerText = activeName;
+        document.getElementById('profile-avatar-char').innerText = firstChar;
+        document.getElementById('profile-email').innerText = userState.email || "user@mail.com";
       }
-    }
 
-    // 6. System Controls, Notices, Banners, Limits, Timers & Ad Settings Realtime Sync
-    db.ref('settings').on('value', snapshot => {
-      const settings = snapshot.val();
-      if(settings) {
-        const currentNotice = settings.scrollNotice || settings.notice || settings.announcement || '';
-        document.getElementById('settingScrollNotice').value = currentNotice;
-
-        if(settings.scrollSpeed !== undefined) document.getElementById('settingScrollSpeed').value = settings.scrollSpeed;
-
-        // Banners Syncing
-        const b1 = settings.banner1 || (settings.banners && settings.banners[0]) || (settings.sliderBanners && settings.sliderBanners[0]) || '';
-        const b2 = settings.banner2 || (settings.banners && settings.banners[1]) || (settings.sliderBanners && settings.sliderBanners[1]) || '';
-        const b3 = settings.banner3 || (settings.banners && settings.banners[2]) || (settings.sliderBanners && settings.sliderBanners[2]) || '';
-        
-        document.getElementById('settingBanner1').value = b1;
-        document.getElementById('settingBanner2').value = b2;
-        document.getElementById('settingBanner3').value = b3;
-
-        if(settings.popupNotice !== undefined) document.getElementById('settingPopupNotice').value = settings.popupNotice;
-        if(settings.popupActive !== undefined) document.getElementById('settingPopupActive').value = settings.popupActive ? "true" : "false";
-
-        if(settings.adReward !== undefined) document.getElementById('settingAdReward').value = settings.adReward;
-        if(settings.spinReward !== undefined) document.getElementById('settingSpinReward').value = settings.spinReward;
-        if(settings.scratchReward !== undefined) document.getElementById('settingScratchReward').value = settings.scratchReward;
-        if(settings.dailyBonus !== undefined) document.getElementById('settingDailyBonus').value = settings.dailyBonus;
-        if(settings.minWithdraw !== undefined) document.getElementById('settingMinWithdraw').value = settings.minWithdraw;
-
-        if(settings.taskLimit !== undefined || settings.dailyTaskLimit !== undefined) {
-          document.getElementById('settingTaskLimit').value = settings.taskLimit || settings.dailyTaskLimit || 10;
-        }
-        if(settings.taskCooldownTimer !== undefined || settings.taskCooldown !== undefined) {
-          document.getElementById('settingTaskCooldownTimer').value = settings.taskCooldownTimer || settings.taskCooldown || 5;
-        }
-
-        if(settings.adLimit !== undefined) document.getElementById('settingAdLimit').value = settings.adLimit;
-        if(settings.spinLimit !== undefined) document.getElementById('settingSpinLimit').value = settings.spinLimit;
-        if(settings.scratchLimit !== undefined) document.getElementById('settingScratchLimit').value = settings.scratchLimit;
-
-        if(settings.adTimerWatch !== undefined) document.getElementById('settingAdTimerWatch').value = settings.adTimerWatch;
-        if(settings.adTimerSpin !== undefined) document.getElementById('settingAdTimerSpin').value = settings.adTimerSpin;
-        if(settings.adTimerScratch !== undefined) document.getElementById('settingAdTimerScratch').value = settings.adTimerScratch;
-
-        // Sync Ad Scripts / Links
-        if(settings.adScriptWatch !== undefined || settings.adLinkWatch !== undefined) {
-          document.getElementById('settingAdScriptWatch').value = settings.adScriptWatch || settings.adLinkWatch || '';
-        }
-        if(settings.adScriptSpin !== undefined || settings.adLinkSpin !== undefined) {
-          document.getElementById('settingAdScriptSpin').value = settings.adScriptSpin || settings.adLinkSpin || '';
-        }
-        if(settings.adScriptScratch !== undefined || settings.adLinkScratch !== undefined) {
-          document.getElementById('settingAdScriptScratch').value = settings.adScriptScratch || settings.adLinkScratch || '';
-        }
-        if(settings.adScriptGlobal !== undefined) document.getElementById('settingAdScriptGlobal').value = settings.adScriptGlobal;
+      if (document.getElementById('refCode')) {
+        document.getElementById('refCode').value = userState.refCode || "REF123456";
       }
-    });
 
-    // Save All Settings Engine (Direct Links & Script Codes Support Added)
-    function saveSettings() {
-      const scrollNotice = document.getElementById('settingScrollNotice').value;
-      const scrollSpeed = parseInt(document.getElementById('settingScrollSpeed').value) || 8;
-      const scrollSpeedPx = Math.max(10, Math.round(200 / scrollSpeed));
-
-      const banner1 = document.getElementById('settingBanner1').value.trim();
-      const banner2 = document.getElementById('settingBanner2').value.trim();
-      const banner3 = document.getElementById('settingBanner3').value.trim();
-
-      const bannerList = [banner1, banner2, banner3].filter(url => url !== '');
-
-      const popupNotice = document.getElementById('settingPopupNotice').value;
-      const popupActive = document.getElementById('settingPopupActive').value === "true";
-
-      const adReward = parseFloat(document.getElementById('settingAdReward').value) || 0;
-      const spinReward = parseFloat(document.getElementById('settingSpinReward').value) || 0;
-      const scratchReward = parseFloat(document.getElementById('settingScratchReward').value) || 0;
-      const dailyBonus = parseFloat(document.getElementById('settingDailyBonus').value) || 0;
-      const minWithdraw = parseFloat(document.getElementById('settingMinWithdraw').value) || 0;
-
-      const taskLimit = parseInt(document.getElementById('settingTaskLimit').value) || 0;
-      const taskCooldownTimer = parseInt(document.getElementById('settingTaskCooldownTimer').value) || 0;
-
-      const adLimit = parseInt(document.getElementById('settingAdLimit').value) || 0;
-      const spinLimit = parseInt(document.getElementById('settingSpinLimit').value) || 0;
-      const scratchLimit = parseInt(document.getElementById('settingScratchLimit').value) || 0;
-
-      const adTimerWatch = parseInt(document.getElementById('settingAdTimerWatch').value) || 5;
-      const adTimerSpin = parseInt(document.getElementById('settingAdTimerSpin').value) || 5;
-      const adTimerScratch = parseInt(document.getElementById('settingAdTimerScratch').value) || 5;
-
-      const adScriptWatchRaw = document.getElementById('settingAdScriptWatch').value;
-      const adScriptSpinRaw = document.getElementById('settingAdScriptSpin').value;
-      const adScriptScratchRaw = document.getElementById('settingAdScriptScratch').value;
-      const adScriptGlobal = document.getElementById('settingAdScriptGlobal').value;
-
-      // Extract Clean URLs if scripts are pasted instead of URLs
-      const adUrlWatch = extractAdUrl(adScriptWatchRaw);
-      const adUrlSpin = extractAdUrl(adScriptSpinRaw);
-      const adUrlScratch = extractAdUrl(adScriptScratchRaw);
-
-      db.ref('settings').update({
-        scrollNotice: scrollNotice,
-        scrollSpeed: scrollSpeed,
-        scrollSpeedPx: scrollSpeedPx,
-        noticeSpeed: scrollSpeed,
-        notice: scrollNotice,
-        announcement: scrollNotice,
-        
-        banner1: banner1,
-        banner2: banner2,
-        banner3: banner3,
-        
-        banners: bannerList,
-        sliderBanners: bannerList,
-        bannerList: bannerList,
-
-        popupNotice: popupNotice,
-        popupActive: popupActive,
-        adReward: adReward,
-        spinReward: spinReward,
-        scratchReward: scratchReward,
-        dailyBonus: dailyBonus,
-        minWithdraw: minWithdraw,
-        taskLimit: taskLimit,
-        dailyTaskLimit: taskLimit,
-        taskCooldownTimer: taskCooldownTimer,
-        taskCooldown: taskCooldownTimer,
-        cooldownTime: taskCooldownTimer,
-        cooldownMinutes: taskCooldownTimer,
-        cooldownInSeconds: taskCooldownTimer * 60,
-        breakTime: taskCooldownTimer,
-        adLimit: adLimit,
-        spinLimit: spinLimit,
-        scratchLimit: scratchLimit,
-        adTimerWatch: adTimerWatch,
-        adTimerSpin: adTimerSpin,
-        adTimerScratch: adTimerScratch,
-
-        // Save Script and Extracted Link simultaneously to support Web and App
-        adScriptWatch: adScriptWatchRaw,
-        adLinkWatch: adUrlWatch,
-        adUrlWatch: adUrlWatch,
-        monetagWatchLink: adUrlWatch,
-
-        adScriptSpin: adScriptSpinRaw,
-        adLinkSpin: adUrlSpin,
-        adUrlSpin: adUrlSpin,
-        monetagSpinLink: adUrlSpin,
-
-        adScriptScratch: adScriptScratchRaw,
-        adLinkScratch: adUrlScratch,
-        adUrlScratch: adUrlScratch,
-        monetagScratchLink: adUrlScratch,
-
-        adScriptGlobal: adScriptGlobal
+      document.querySelectorAll('.active-user-display-name').forEach(el => {
+        el.innerText = activeName;
       });
 
-      alert('সব সেটিংস এবং এডস কোড/লিংক সফলভাবে সেভ করা হয়েছে!');
+      document.getElementById('main-balance').innerText = (userState.balance || 0).toFixed(2);
+      document.getElementById('today-earned').innerText = "৳ " + (userState.todayEarned || 0).toFixed(2);
+      document.getElementById('ref-earned').innerText = "৳ " + (userState.refEarned || 0).toFixed(2);
+      document.getElementById('scratchCoinDisplay').innerText = (userState.balance || 0).toFixed(2);
+      document.getElementById('cardCountVal').innerText = userState.scratchCards !== undefined ? userState.scratchCards : 3;
+
+      const adCountStr = `${toBengaliDigits(userState.todayAdCount || 0)}/${toBengaliDigits(adminSettings.adLimit)}`;
+      const spinCountStr = `${toBengaliDigits(userState.todaySpinCount || 0)}/${toBengaliDigits(adminSettings.spinLimit)}`;
+      const scratchCountStr = `${toBengaliDigits(userState.todayScratchCount || 0)}/${toBengaliDigits(adminSettings.scratchLimit)}`;
+
+      document.getElementById('displayAdLimit').innerText = adCountStr;
+      document.getElementById('displaySpinLimit').innerText = spinCountStr;
+      document.getElementById('displayScratchLimit').innerText = scratchCountStr;
+
+      document.getElementById('spinModalLimit').innerText = spinCountStr;
+      document.getElementById('scratchModalLimit').innerText = scratchCountStr;
     }
 
-    function sendAnnouncement() {
-      const msg = prompt("সব ইউজারের জন্য নোটিশ লিখুন:");
-      if (msg) {
-        db.ref('settings').update({
-          announcement: msg,
-          notice: msg,
-          scrollNotice: msg
+    // Update Earnings
+    function addEarnings(amount, type) {
+      if (!userRef) return;
+
+      userState.balance = (userState.balance || 0) + amount;
+      userState.todayEarned = (userState.todayEarned || 0) + amount;
+
+      if (type === 'ad') userState.todayAdCount = (userState.todayAdCount || 0) + 1;
+      if (type === 'spin') userState.todaySpinCount = (userState.todaySpinCount || 0) + 1;
+      if (type === 'scratch') userState.todayScratchCount = (userState.todayScratchCount || 0) + 1;
+      if (type === 'task') userState.todayTaskCount = (userState.todayTaskCount || 0) + 1;
+
+      userRef.update({
+        balance: userState.balance,
+        todayEarned: userState.todayEarned,
+        todayAdCount: userState.todayAdCount || 0,
+        todaySpinCount: userState.todaySpinCount || 0,
+        todayScratchCount: userState.todayScratchCount || 0,
+        todayTaskCount: userState.todayTaskCount || 0,
+        dailyClaimed: userState.dailyClaimed,
+        scratchCards: userState.scratchCards,
+        completedTasks: userState.completedTasks || {}
+      });
+    }
+
+    // Navigation Switcher
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      if (el) el.classList.add('active');
+    }
+
+    // Modal Control
+    function toggleModal(modalId, show) {
+      document.getElementById(modalId).style.display = show ? 'flex' : 'none';
+      if (modalId === 'scratchModal' && show) {
+        initScratchCanvas();
+      }
+    }
+
+    // Watch Ads Action (Home Tab)
+    function watchAd(btnElement) {
+      if ((userState.todayAdCount || 0) >= adminSettings.adLimit) {
+        alert("আজকের ওয়াচ এডস দেখার সীমা শেষ! আগামীকাল আবার চেষ্টা করুন।");
+        return;
+      }
+
+      triggerAdNetwork(adminSettings.adScriptWatch);
+
+      let timerDuration = parseInt(adminSettings.adTimer);
+      if (isNaN(timerDuration) || timerDuration <= 0) {
+        const reward = adminSettings.adReward;
+        addEarnings(reward, 'ad');
+        alert(`অভিনন্দন! আপনি ৳ ${reward.toFixed(2)} রিওয়ার্ড পেয়েছেন।`);
+        return;
+      }
+
+      let timeLeft = timerDuration;
+      const originalText = btnElement ? btnElement.innerText : "Earn Now";
+      if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.style.opacity = "0.7";
+        btnElement.innerText = `⏳ অপেক্ষা করুন (${toBengaliDigits(timeLeft)}s)`;
+      }
+
+      const timer = setInterval(() => {
+        timeLeft--;
+        if (btnElement && timeLeft >= 0) {
+          btnElement.innerText = `⏳ অপেক্ষা করুন (${toBengaliDigits(timeLeft)}s)`;
+        }
+
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          if (btnElement) {
+            btnElement.innerText = originalText;
+            btnElement.disabled = false;
+            btnElement.style.opacity = "1";
+          }
+          const reward = adminSettings.adReward;
+          addEarnings(reward, 'ad');
+          alert(`অভিনন্দন! আপনি ৳ ${reward.toFixed(2)} রিওয়ার্ড পেয়েছেন।`);
+        }
+      }, 1000);
+    }
+
+    // Daily Bonus Claim
+    function claimDailyBonus() {
+      if(userState.dailyClaimed) {
+        alert("আপনি আজকের দৈনিক বোনাস ইতোমধ্যে ক্লেইম করেছেন!");
+        return;
+      }
+      userState.dailyClaimed = true;
+      const reward = adminSettings.dailyBonus;
+      addEarnings(reward, 'daily');
+      alert(`দৈনিক বোনাস ৳ ${reward.toFixed(2)} সফলভাবে যোগ হয়েছে!`);
+    }
+
+    // Open Scratch Card UI
+    function openScratchCard() {
+      toggleModal('scratchModal', true);
+    }
+
+    // Interactive Scratch Canvas Logic
+    let scratchCanvas, scratchCtx, isScratching = false, cardScratched = false, isScratchTimerRunning = false;
+
+    function initScratchCanvas() {
+      scratchCanvas = document.getElementById('scratchCanvas');
+      if (!scratchCanvas) return;
+      scratchCtx = scratchCanvas.getContext('2d');
+      cardScratched = false;
+      isScratchTimerRunning = false;
+
+      const scratchTimerText = document.getElementById('scratchTimerText');
+      if (scratchTimerText) scratchTimerText.style.display = "none";
+
+      const rect = scratchCanvas.getBoundingClientRect();
+      scratchCanvas.width = rect.width;
+      scratchCanvas.height = rect.height;
+
+      scratchCtx.globalCompositeOperation = 'source-over';
+      const grad = scratchCtx.createLinearGradient(0, 0, scratchCanvas.width, scratchCanvas.height);
+      grad.addColorStop(0, '#d1d5db');
+      grad.addColorStop(0.5, '#9ca3af');
+      grad.addColorStop(1, '#6b7280');
+      scratchCtx.fillStyle = grad;
+      scratchCtx.fillRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+
+      scratchCtx.fillStyle = '#1f2937';
+      scratchCtx.font = 'bold 16px sans-serif';
+      scratchCtx.textAlign = 'center';
+      scratchCtx.fillText('SCRATCH HERE', scratchCanvas.width / 2, scratchCanvas.height / 2 + 5);
+
+      scratchCanvas.onmousedown = startScratch;
+      scratchCanvas.ontouchstart = startScratch;
+      scratchCanvas.onmousemove = scratchMove;
+      scratchCanvas.ontouchmove = scratchMove;
+      scratchCanvas.onmouseup = endScratch;
+      scratchCanvas.ontouchend = endScratch;
+    }
+
+    function startScratch(e) {
+      if (isScratchTimerRunning) return;
+
+      if ((userState.todayScratchCount || 0) >= adminSettings.scratchLimit) {
+        alert("আজকের স্ক্র্যাচ কার্ডের দৈনিক সীমা শেষ!");
+        return;
+      }
+
+      if ((userState.scratchCards || 0) <= 0) {
+        alert("আপনার কোনো স্ক্র্যাচ কার্ড বাকি নেই! 'Watch Ad' বা 'Complete Task' এ ক্লিক করে কার্ড তৈরি/বৃদ্ধি করে নিন।");
+        return;
+      }
+
+      if (cardScratched) {
+        initScratchCanvas();
+      }
+
+      isScratching = true;
+    }
+
+    function getScratchedPercentage() {
+      try {
+        const imageData = scratchCtx.getImageData(0, 0, scratchCanvas.width, scratchCanvas.height);
+        const pixels = imageData.data;
+        let transparent = 0;
+        const total = pixels.length / 4;
+        for (let i = 3; i < pixels.length; i += 16) {
+          if (pixels[i] < 128) {
+            transparent++;
+          }
+        }
+        return (transparent / (total / 4)) * 100;
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    function scratchMove(e) {
+      if (!isScratching || isScratchTimerRunning || cardScratched) return;
+      
+      const rect = scratchCanvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+
+      scratchCtx.globalCompositeOperation = 'destination-out';
+      scratchCtx.beginPath();
+      scratchCtx.arc(x, y, 22, 0, Math.PI * 2);
+      scratchCtx.fill();
+
+      if (getScratchedPercentage() >= 35) {
+        cardScratched = true;
+        isScratching = false;
+        isScratchTimerRunning = true;
+        
+        scratchCtx.clearRect(0, 0, scratchCanvas.width, scratchCanvas.height);
+
+        userState.scratchCards = Math.max(0, (userState.scratchCards || 3) - 1);
+        const reward = adminSettings.scratchReward;
+
+        triggerAdNetwork(adminSettings.adScriptScratch);
+
+        let timerDuration = parseInt(adminSettings.scratchTimer);
+
+        const scratchTimerText = document.getElementById('scratchTimerText');
+
+        if (isNaN(timerDuration) || timerDuration <= 0) {
+          isScratchTimerRunning = false;
+          addEarnings(reward, 'scratch');
+          const activeWinText = document.getElementById('activeUserWinDisplay');
+          if (activeWinText) {
+            activeWinText.innerText = `Won ৳ ${reward.toFixed(2)}`;
+            activeWinText.style.color = "var(--accent-gold)";
+          }
+          updateUI();
+          alert(`🎉 YOU WIN!\n\nঅভিনন্দন ${userState.name || 'ইউজার'}! আপনি ৳ ${reward.toFixed(2)} রিওয়ার্ড পেয়েছেন!`);
+          
+          if ((userState.scratchCards || 0) > 0 && (userState.todayScratchCount || 0) < adminSettings.scratchLimit) {
+            initScratchCanvas();
+          }
+          return;
+        }
+
+        let timeLeft = timerDuration;
+        if (scratchTimerText) {
+          scratchTimerText.style.display = "block";
+          scratchTimerText.innerText = `⏳ বিজ্ঞাপন দেখা হচ্ছে... ${toBengaliDigits(timeLeft)} সেকেন্ড অপেক্ষা করুন`;
+        }
+
+        const scratchInterval = setInterval(() => {
+          timeLeft--;
+          if (scratchTimerText && timeLeft >= 0) {
+            scratchTimerText.innerText = `⏳ বিজ্ঞাপন দেখা হচ্ছে... ${toBengaliDigits(timeLeft)} সেকেন্ড অপেক্ষা করুন`;
+          }
+
+          if (timeLeft <= 0) {
+            clearInterval(scratchInterval);
+            isScratchTimerRunning = false;
+            if (scratchTimerText) scratchTimerText.style.display = "none";
+
+            addEarnings(reward, 'scratch');
+
+            const activeWinText = document.getElementById('activeUserWinDisplay');
+            if (activeWinText) {
+              activeWinText.innerText = `Won ৳ ${reward.toFixed(2)}`;
+              activeWinText.style.color = "var(--accent-gold)";
+            }
+
+            updateUI();
+            alert(`🎉 YOU WIN!\n\nঅভিনন্দন ${userState.name || 'ইউজার'}! আপনি ৳ ${reward.toFixed(2)} রিওয়ার্ড পেয়েছেন!`);
+
+            if ((userState.scratchCards || 0) > 0 && (userState.todayScratchCount || 0) < adminSettings.scratchLimit) {
+              initScratchCanvas();
+            }
+          }
+        }, 1000);
+      }
+    }
+
+    function endScratch() {
+      isScratching = false;
+    }
+
+    // Watch Ad For Scratch Card
+    function watchAdForCard(btnElement) {
+      triggerAdNetwork(adminSettings.adScriptWatch || adminSettings.adScriptScratch);
+
+      let timerDuration = parseInt(adminSettings.adTimer);
+
+      const scratchTimerText = document.getElementById('scratchTimerText');
+
+      if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.style.opacity = "0.6";
+      }
+
+      if (isNaN(timerDuration) || timerDuration <= 0) {
+        if (btnElement) {
+          btnElement.disabled = false;
+          btnElement.style.opacity = "1";
+        }
+        userState.scratchCards = (userState.scratchCards || 0) + 1;
+        if (userRef) userRef.update({ scratchCards: userState.scratchCards });
+        updateUI();
+        alert("অভিনন্দন! আপনি +১টি নতুন স্ক্র্যাচ কার্ড পেয়েছেন!");
+        initScratchCanvas();
+        return;
+      }
+
+      let timeLeft = timerDuration;
+      if (scratchTimerText) {
+        scratchTimerText.style.display = "block";
+        scratchTimerText.innerText = `⏳ বিজ্ঞাপন দেখা হচ্ছে... ${toBengaliDigits(timeLeft)} সেকেন্ড অপেক্ষা করুন`;
+      }
+
+      const cardTimer = setInterval(() => {
+        timeLeft--;
+        if (scratchTimerText && timeLeft >= 0) {
+          scratchTimerText.innerText = `⏳ বিজ্ঞাপন দেখা হচ্ছে... ${toBengaliDigits(timeLeft)} সেকেন্ড অপেক্ষা করুন`;
+        }
+
+        if (timeLeft <= 0) {
+          clearInterval(cardTimer);
+          if (scratchTimerText) scratchTimerText.style.display = "none";
+          if (btnElement) {
+            btnElement.disabled = false;
+            btnElement.style.opacity = "1";
+          }
+          
+          userState.scratchCards = (userState.scratchCards || 0) + 1;
+          if (userRef) userRef.update({ scratchCards: userState.scratchCards });
+          updateUI();
+          alert("অভিনন্দন! আপনি +১টি নতুন স্ক্র্যাচ কার্ড পেয়েছেন!");
+          
+          initScratchCanvas();
+        }
+      }, 1000);
+    }
+
+    function goToTasksFromScratch() {
+      toggleModal('scratchModal', false);
+      const taskNavBtn = document.querySelectorAll('.nav-item')[1];
+      switchTab('tasksTab', taskNavBtn);
+    }
+
+    // COPY REFERRAL CODE ONLY
+    function copyReferral() {
+      const code = userState.refCode || "REF123456";
+      copyTextToClipboard(code, "রেফারেল কোড কপি করা হয়েছে!");
+    }
+
+    // SHARE REFERRAL
+    function shareReferral() {
+      const code = userState.refCode || "REF123456";
+      const pageUrl = window.location.origin + window.location.pathname;
+      const shareText = `💎 Premium Earning Platform-এ জয়েন করুন এবং প্রতিদিন ইনকাম করুন!\n\nআমার রেফারেল কোড: ${code}\nঅ্যাপ লিংক: ${pageUrl}`;
+
+      if (navigator.share) {
+        navigator.share({
+          title: 'Premium Earning Platform',
+          text: shareText,
+          url: pageUrl
+        }).catch((err) => {
+          copyTextToClipboard(shareText, "রেফারেল লিংক ও মেসেজ কপি করা হয়েছে! এখন যেকোনো সোশ্যাল মিডিয়ায় পেস্ট করে শেয়ার করুন।");
         });
-        alert("নোটিশ সফলভাবে ফায়ারবেসে আপডেট করা হয়েছে!");
+      } else {
+        copyTextToClipboard(shareText, "রেফারেল লিংক ও মেসেজ কপি করা হয়েছে! এখন যেকোনো সোশ্যাল মিডিয়ায় পেস্ট করে শেয়ার করুন।");
       }
     }
 
-    function toggleMaintenance() {
-      db.ref('settings/maintenance').transaction(current => !current);
-      alert("Maintenance Mode Toggled Successfully!");
+    // Helper Function for Cross-Browser Text Copying
+    function copyTextToClipboard(text, successMsg) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert(successMsg);
+        }).catch(() => {
+          fallbackCopyText(text, successMsg);
+        });
+      } else {
+        fallbackCopyText(text, successMsg);
+      }
     }
 
-    function filterUsers() {
-      const input = document.getElementById("searchUser").value.toUpperCase();
-      const rows = document.getElementById("userTableBody").getElementsByTagName("tr");
+    function fallbackCopyText(text, successMsg) {
+      const tempInput = document.createElement("textarea");
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+      alert(successMsg);
+    }
 
-      for (let i = 0; i < rows.length; i++) {
-        let text = rows[i].innerText;
-        rows[i].style.display = text.toUpperCase().indexOf(input) > -1 ? "" : "none";
+    // SUBMIT WITHDRAWAL REQUEST
+    function requestWithdrawal() {
+      if (!currentUserId) return;
+
+      const acc = document.getElementById('withdrawAcc').value.trim();
+      const amount = parseFloat(document.getElementById('withdrawAmount').value);
+      const method = document.getElementById('withdrawMethod').value;
+
+      if(!acc || isNaN(amount)) {
+        alert("সঠিক তথ্য প্রদান করুন!");
+        return;
       }
+
+      const minLimit = adminSettings.minWithdraw || 50.00;
+      if(amount < minLimit) {
+        alert(`সর্বনিম্ন উত্তোলন ৳ ${minLimit.toFixed(2)}`);
+        return;
+      }
+
+      if(amount > userState.balance) {
+        alert("পর্যাপ্ত ব্যালেন্স নেই!");
+        return;
+      }
+
+      userState.balance -= amount;
+
+      const withdrawalRef = database.ref('withdrawals/' + currentUserId).push();
+      withdrawalRef.set({
+        account: acc,
+        amount: amount,
+        method: method,
+        status: 'Pending',
+        timestamp: new Date().toISOString()
+      });
+
+      if (userRef) userRef.update({ balance: userState.balance });
+
+      document.getElementById('withdrawAcc').value = '';
+      document.getElementById('withdrawAmount').value = '';
+
+      alert("উত্তোলন রিকোয়েস্ট সফল হয়েছে!");
+    }
+
+    // Spin Wheel Canvas Implementation
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const segments = ['WIN', 'BONUS', 'TRY AGAIN', 'WIN', 'LUCKY', 'JACKPOT'];
+    const colors = ['#6366f1', '#a855f7', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
+
+    function drawWheel() {
+      const numSegments = segments.length;
+      const angle = (2 * Math.PI) / numSegments;
+
+      for (let i = 0; i < numSegments; i++) {
+        ctx.beginPath();
+        ctx.fillStyle = colors[i];
+        ctx.moveTo(125, 125);
+        ctx.arc(125, 125, 125, i * angle, (i + 1) * angle);
+        ctx.fill();
+
+        ctx.save();
+        ctx.fillStyle = "#fff";
+        ctx.translate(125, 125);
+        ctx.rotate(i * angle + angle / 2);
+        ctx.textAlign = "right";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText(segments[i], 110, 5);
+        ctx.restore();
+      }
+    }
+    drawWheel();
+
+    let spinning = false;
+    let currentSpinRotation = 0;
+
+    function startSpin() {
+      if ((userState.todaySpinCount || 0) >= adminSettings.spinLimit) {
+        alert("আজকের স্পিন খেলার দৈনিক সীমা শেষ!");
+        return;
+      }
+
+      if (spinning) return;
+      spinning = true;
+
+      const spinBtn = document.getElementById('spinBtn');
+      const timerText = document.getElementById('spinTimerText');
+
+      if (spinBtn) {
+        spinBtn.disabled = true;
+        spinBtn.style.opacity = "0.5";
+      }
+
+      triggerAdNetwork(adminSettings.adScriptSpin);
+
+      currentSpinRotation += 1440 + Math.floor(Math.random() * 360);
+      canvas.style.transform = `rotate(${currentSpinRotation}deg)`;
+
+      setTimeout(() => {
+        let timerDuration = parseInt(adminSettings.spinTimer);
+
+        if (isNaN(timerDuration) || timerDuration <= 0) {
+          spinning = false;
+          if (spinBtn) {
+            spinBtn.disabled = false;
+            spinBtn.style.opacity = "1";
+          }
+          const reward = adminSettings.spinReward;
+          addEarnings(reward, 'spin');
+          alert(`🎉 YOU WIN!\n\nঅভিনন্দন! আপনি স্পিন করে ৳ ${reward.toFixed(2)} রিওয়ার্ড পেয়েছেন!`);
+          return;
+        }
+
+        let timeLeft = timerDuration;
+
+        if (timerText) {
+          timerText.style.display = "block";
+          timerText.innerText = `⏳ বিজ্ঞাপন দেখা হচ্ছে... ${toBengaliDigits(timeLeft)} সেকেন্ড অপেক্ষা করুন`;
+        }
+
+        const countdownInterval = setInterval(() => {
+          timeLeft--;
+
+          if (timerText && timeLeft >= 0) {
+            timerText.innerText = `⏳ বিজ্ঞাপন দেখা হচ্ছে... ${toBengaliDigits(timeLeft)} সেকেন্ড অপেক্ষা করুন`;
+          }
+
+          if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            spinning = false;
+
+            if (spinBtn) {
+              spinBtn.disabled = false;
+              spinBtn.style.opacity = "1";
+            }
+
+            if (timerText) {
+              timerText.style.display = "none";
+            }
+
+            const reward = adminSettings.spinReward;
+            addEarnings(reward, 'spin');
+
+            alert(`🎉 YOU WIN!\n\nঅভিনন্দন! আপনি স্পিন করে ৳ ${reward.toFixed(2)} রিওয়ার্ড পেয়েছেন!`);
+          }
+        }, 1000);
+
+      }, 3000);
     }
   </script>
 </body>
